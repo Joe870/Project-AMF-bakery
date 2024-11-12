@@ -22,14 +22,15 @@ class alarmHistoryController extends Controller
 
         // read out the csv file
         $data = [];
-        $chunkSize = 1000; // define amount of rows you want to be returned
-
+        $otherdata = 7;
+        $chunkSize = 1; // define amount of rows you want to be returned
+        $totalData = $chunkSize + $otherdata;
         while (($row = fgetcsv($handle)) !== false) {
             // Add row to data (or process it)
             $data[] = $row;
 
             // Puts a limit to only loading the amount of chunk size
-            if (count($data) >= $chunkSize) {
+            if (count($data) >= $totalData) {
                 break;
             }
         }
