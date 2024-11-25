@@ -1,6 +1,7 @@
 import sqlite3
 import pandas as pd
 import os
+import sys
 
 def rdb_to_csv(rdb_path, output_folder):
     # Ensure the output folder exists
@@ -33,9 +34,12 @@ def rdb_to_csv(rdb_path, output_folder):
     conn.close()
     print("All tables have been exported to CSV.")
 
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python convert_rdb.py <rdb_path> <output_folder>")
+        sys.exit(1)
+    
 # Define the path to your .rdb file and the output folder
-rdb_path = r"C:\Users\joell\Documents\Studie software developer\Sofware developer\Bovenbouw\Joëlle\projecten\code\Python\AlarmBuffer0.rdb"    # Replace with the actual path to your .rdb file
-output_folder = r"C:\Users\joell\Documents\Studie software developer\Sofware developer\Bovenbouw\Joëlle\projecten\code\Python\test" # Replace with the path to your desired output folder
-
-# Run the conversion function
+rdb_path = sys.argv[1]
+output_folder = sys.argv[2]
 rdb_to_csv(rdb_path, output_folder)
