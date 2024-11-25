@@ -1,0 +1,5 @@
+{
+    "require": {
+        "asantibanez/livewire-charts": "^4.1"
+    }
+}
