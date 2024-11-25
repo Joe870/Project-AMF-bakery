@@ -16,3 +16,4 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);
+Route::get('/login', [alarmHistoryController::class, 'show']);//Change to go to login view
