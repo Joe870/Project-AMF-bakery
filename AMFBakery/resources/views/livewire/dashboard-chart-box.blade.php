@@ -40,19 +40,15 @@ body {
 }
 
 .box-large:hover{
-    background-color: #D6D4D4;
+    background-color: #c5c2c2;
     border: 4px solid #000000;
     border-radius: 30px;
 }
 
 .box:hover{
-    background-color: #D6D4D4;
+    background-color: #c5c2c2;
     border: 4px solid #000000;
     border-radius: 30px;
-}
-
-#box{
-    grid-column: span 1;
 }
 
 .box-large {
@@ -99,24 +95,12 @@ body {
     <div class="container">
 
 
-        <div class="box" onclick="window.location.href='staafdiagram.html'">
-            <livewire:livewire-column-chart
-            :column-chart-model="$columnChartModel"
-            key="{{ $columnChartModel->reactiveKey() }}" />
-        </div>
+        <div class="box" onclick="window.location.href='staafdiagram.html'">Staafdiagram
 
-
-        <div class="box" onclick="window.location.href='lineairegrafiek.html'">
-            <livewire:livewire-line-chart
-            :line-chart-model="$lineChartModel"
-            key="{{ $lineChartModel->reactiveKey() }}" />
+            <!-- <canvas id="barChart" width="400" height="200"></canvas> -->
         </div>
-
-        <div class="box" onclick="window.location.href='cirkeldiagram.html'">
-            <livewire:livewire-pie-chart
-            :pie-chart-model="$pieChartModel"
-            key="{{ $pieChartModel->reactiveKey() }}" />
-        </div>
+        <div class="box" onclick="window.location.href='lineairegrafiek.html'">Lineaire Grafiek</div>
+        <div class="box" onclick="window.location.href='cirkeldiagram.html'">Cirkeldiagram</div>
         
         <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
             <p>Klik op een section button hieronder</p>
@@ -139,14 +123,11 @@ body {
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
         </div>
     </div>
-    
 
     <script>
         function updateSmallBox(content) {
             document.getElementById('small-dynamic-box').innerHTML = `<p>${content}</p>`;
         }
-        
-
         
 
     </script>
