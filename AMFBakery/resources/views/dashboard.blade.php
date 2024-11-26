@@ -7,22 +7,9 @@
     @livewireStyles
 </head>
 <body>
-
-
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
 @include('includes/navbar')
 
-<livewire:dashboard-component />
+    <livewire:dashboard-chart-box />
     @livewireScripts
-    @livewireStyles
-    @livewireChartsScripts
-    @livewireChartsScripts
-
-
-
-
-
-
 </body>
 </html>
