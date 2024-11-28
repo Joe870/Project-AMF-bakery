@@ -4,12 +4,12 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 
 class DashboardComponent extends Component
 {
-    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789']; 
+    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789'];
 
     public function getColumnChartModel()
     {
@@ -20,7 +20,7 @@ class DashboardComponent extends Component
             ->addColumn('test3', 300, '#90cdf4');
     }
 
-    
+
     public function getLineChartModel()
     {
         return (new LineChartModel())
