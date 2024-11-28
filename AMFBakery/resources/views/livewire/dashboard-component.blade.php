@@ -9,8 +9,7 @@
 }
 
 body {
-    width: 100%;
-
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -24,7 +23,7 @@ body {
     grid-template-rows: repeat(2, 200px);
     gap: 20px;
     margin: 20px;
-    width: 100%;
+    max-width: 100%
 }
 
 .box, .box-large {
@@ -39,6 +38,13 @@ body {
     border-radius: 30px;
 }
 
+.filter-section, .Zoekwoorden{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+
+}
 .box-large:hover{
     background-color: #D6D4D4;
     border: 4px solid #000000;
@@ -95,8 +101,19 @@ body {
     </style>
 
 
+<div class="filter-section">
+    <select id="filteren">
+    <option value="">filteren op</option>
+    </select>
+    <button>OK</button>
+    
+    <input type="Text" class="Zoekwoorden" placeholder="Filteren op zoekwoord">
+    <button>OK</button>
+
+
     
     <div class="container">
+
 
 
         <div class="box" onclick="window.location.href='staafdiagram.html'">

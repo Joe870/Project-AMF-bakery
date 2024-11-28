@@ -20,7 +20,6 @@ class DashboardComponent extends Component
             ->addColumn('test3', 300, '#90cdf4');
     }
 
-    
     public function getLineChartModel()
     {
         return (new LineChartModel())
