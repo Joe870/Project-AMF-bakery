@@ -9,47 +9,46 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class RdbController extends Controller
 {
-    public function convertRdb(Request $request)
+    public function convert(Request $request)
     {
-        $request->validate([
-            'rdb_file' => 'required|file|mimes:rdb',
-        ]);
-
-        // Save the uploaded file temporarily
-        $uploadedFile = $request->file('rdb_file');
-        $filePath = $uploadedFile->storeAs('temp', $uploadedFile->getClientOriginalName());
-
-        // Define the output folder
-        $outputFolder = storage_path('app/csv_output');
-
-        // Ensure the output folder exists
-        if (!file_exists($outputFolder)) {
-            mkdir($outputFolder, 0777, true);
+        {
+            // Validate the file upload
+            $request->validate([
+                'rdb_file' => 'required|file|mimes:rdb',
+            ]);
+    
+            // Store the uploaded file
+            $path = $request->file('rdb_file')->store('rdb_files');
+    
+            // Get the full path of the file
+            $fullPath = storage_path('app/' . $path);
+    
+            // Define output directory for CSV files
+            $outputDir = storage_path('app/csv_outputs');
+            if (!file_exists($outputDir)) {
+                mkdir($outputDir, 0755, true);
+            }
+    
+            // Run the Python script
+            $process = new Process(['python3', base_path('convert_rdb.py'), $fullPath, $outputDir]);
+            $process->run();
+    
+            // Check for errors
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+    
+            // Return the list of generated CSV files
+            $csvFiles = array_diff(scandir($outputDir), ['.', '..']);
+            return view('csv_file', ['files' => $csvFiles, 'outputDir' => $outputDir]);
+            if (!$process->isSuccessful()) {
+                dd($process->getErrorOutput());
+            }
         }
+    }
 
-        // Path to the Python script
-        $pythonScript = base_path('convert_rdb_to_csv.py');
-
-        // Run the Python script
-        $process = new Process([
-            'python',
-            $pythonScript,
-            storage_path('app/' . $filePath),
-            $outputFolder,
-        ]);
-
-        $process->run();
-
-        // Check if the script executed successfully
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
-
-        // Provide feedback and list generated CSV files
-        $csvFiles = array_diff(scandir($outputFolder), ['.', '..']);
-        return response()->json([
-            'message' => 'RDB file converted successfully!',
-            'csv_files' => $csvFiles,
-        ]);
+    public function upload(Request $request)
+    {
+        return view("rdbconversion.upload");
     }
 }
