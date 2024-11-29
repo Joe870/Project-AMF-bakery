@@ -8,6 +8,7 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::view('profile', 'profile')
+    ->middleware(['auth', 'verified'])
     ->name('profile');
 
 
