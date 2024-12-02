@@ -38,13 +38,26 @@ body {
     border-radius: 30px;
 }
 
-.filter-section, .Zoekwoorden{
+.filter-section {
+    margin-top: 15px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-
-
+    flex-direction: row; /* Align items in a row */
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Add spacing between items */
 }
+
+.filter-section select, 
+.filter-section input {
+    margin: 0; /* Remove any default margin */
+    padding: 5px 10px; /* Optional: Adjust padding for better spacing */
+}
+
+.filter-section button {
+    padding: 5px 15px; /* Adjust padding for consistency */
+}
+
+
 .box-large:hover{
     background-color: #D6D4D4;
     border: 4px solid #000000;
@@ -103,12 +116,13 @@ body {
 
 <div class="filter-section">
     <select id="filteren">
-    <option value="">filteren op</option>
+        <option value="">filteren op</option>
     </select>
     <button>OK</button>
-    
-    <input type="Text" class="Zoekwoorden" placeholder="Filteren op zoekwoord">
+
+    <input type="text" class="Zoekwoorden" placeholder="Filteren op zoekwoord">
     <button>OK</button>
+</div>
 
 
     
