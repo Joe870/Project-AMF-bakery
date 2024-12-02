@@ -3,40 +3,40 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class alarmHistoryController extends Controller
 {
     public function show()
     {
-        // Path to (for now) csv file
-        // note that this is only temporary, later on we will try to import from the webpage
-        // instead of using the manual way
+        // Pad naar het CSV-bestand
         $filePath = storage_path('app/public/AlarmHistory.csv');
 
+        // Controleer of het bestand bestaat
+        if (!file_exists($filePath)) {
+            return view('csv.show', ['data' => []])->with('message', 'Upload een CSV-bestand om te bekijken.');
+        }
+
+        // Open het bestand voor lezen
         $handle = fopen($filePath, 'r');
 
         if (!$handle) {
-            abort(404, 'File not found');
+            abort(500, 'CSV-bestand kan niet worden geopend.');
         }
 
-        // read out the csv file
+        // Lees de inhoud van het CSV-bestand
         $data = [];
-        $otherdata = 0;
-        $chunkSize = 100; // define amount of rows you want to be returned
-        $totalData = $chunkSize + $otherdata;
         while (($row = fgetcsv($handle)) !== false) {
-            // Add row to data (or process it)
             $data[] = $row;
-
-            // Puts a limit to only loading the amount of chunk size
-            if (count($data) >= $totalData) {
-                break;
-            }
         }
 
         fclose($handle);
 
+        // Controleer of het bestand leeg is
+        if (empty($data)) {
+            return view('csv.show', ['data' => []])->with('message', 'Het CSV-bestand is leeg.');
+        }
+
+        // Stuur de data naar de view
         return view('csv.show', compact('data'));
     }
 }

@@ -8,26 +8,15 @@ class FileUploadController extends Controller
 {
     public function upload(Request $request)
     {
-        // Valideer de binnenkomende bestanden
+        // Validatie van het bestand
         $request->validate([
-            'files.*' => 'required|file|max:2048', // Maximaal 2MB per bestand
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
         ]);
 
-        $uploadedFiles = []; // Array om opgeslagen paden op te slaan
+        // Sla het geüploade bestand op in de `storage/app/public`-map
+        $path = $request->file('csv_file')->storeAs('public', 'AlarmHistory.csv');
 
-        // Controleer of er bestanden zijn geüpload
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                // Sla het bestand op in de 'public/uploads' map
-                $path = $file->store('uploads', 'public');
-                $uploadedFiles[] = $path; // Voeg het opgeslagen pad toe aan de array
-            }
-        }
-
-        // Stuur een JSON-reactie terug met de opgeslagen bestanden
-        return response()->json([
-            'success' => true,
-            'files' => $uploadedFiles,
-        ]);
+        // Redirect terug naar de CSV-weergavepagina
+        return redirect()->route('csv.show')->with('message', 'CSV-bestand succesvol geüpload!');
     }
 }
