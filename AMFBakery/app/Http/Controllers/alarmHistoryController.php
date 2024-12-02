@@ -98,7 +98,7 @@ class alarmHistoryController extends Controller
         ];
 
         // Read each row in the file
-        while (($row = fget2csv($handle)) !== false) {
+        while (($row = fgetcsv($handle)) !== false) {
             // Combine headers and row data
             $data = array_combine($columns, $row);
 

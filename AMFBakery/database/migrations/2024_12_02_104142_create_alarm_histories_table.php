@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('alarm_histories', function (Blueprint $table) {
             $table->id();
             $table->timestamp('EventTime')->nullable();
-            $table->string('Message')->nullable();
+            $table->text('Message')->nullable();
             $table->string('StateChangeType')->nullable();
             $table->string('AlarmClass')->nullable();
             $table->integer('AlarmCount')->nullable();
@@ -33,17 +33,16 @@ return new class extends Migration
             $table->string('Tag4Value')->nullable();
             $table->string('EventCategory')->nullable();
             $table->string('Quality')->nullable();
-            $table->string('Expression')->nullable();
-            $table->timestamps();
+            $table->text('Expression')->nullable();
+            $table->timestamps(); // Adds `created_at` and `updated_at`
         });
     }
 
+
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('alarm_histories');
     }
