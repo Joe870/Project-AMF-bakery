@@ -9,7 +9,7 @@
 }
 
 body {
-    width: 100%;
+    max-width: 100%;
 
     display: flex;
     flex-direction: column;
@@ -24,7 +24,7 @@ body {
     grid-template-rows: repeat(2, 200px);
     gap: 20px;
     margin: 20px;
-    width: 100%;
+    max-width: 100%;
 }
 
 .box, .box-large {

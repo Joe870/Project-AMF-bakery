@@ -4,6 +4,11 @@
 
         <li><a href="{{ route('login') }}">Login</a></li>
         <li><a href="{{ route('register') }}">Register</a></li>
+        <li><a href="{{ route('profile') }}">Profile</a></li>
+        <li><a href="{{ logout }}">Log Out</a></li>
+
+
+
 
     </ul>
 </nav>
