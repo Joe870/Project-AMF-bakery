@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class alarmHistoryController extends Controller
 {
-    public function show()
+    public function show() // fine to later remove this function. Currently keeping it for testing purposes. Will be using the dashboard and importCsvFromFile function in the future.
     {
         $filePath = storage_path('app/public/AlarmHistory.csv');
 
@@ -24,20 +24,19 @@ class alarmHistoryController extends Controller
         $chunkSize = 1000;
         $otherData = 6;
         $chunkSize += $otherData;
-        $messages = []; // To track all messages across rows
+        $messages = [];
 
         // Read header row
         $header = fgetcsv($handle);
         if ($header) {
-            $data[] = $header; // Store header in $data
+            $data[] = $header;
         }
 
         // Loop through CSV rows
         while (($row = fgetcsv($handle)) !== false) {
             $data[] = $row;
 
-            // Assume message (error details) is in a specific column (index 1 for 'Message')
-            $messageColumnIndex = 1; // Adjust based on your CSV structure (Message column)
+            $messageColumnIndex = 1;
 
             if (isset($row[$messageColumnIndex]) && !empty($row[$messageColumnIndex])) {
                 $message = trim($row[$messageColumnIndex]);
@@ -60,7 +59,7 @@ class alarmHistoryController extends Controller
 
         fclose($handle);
 
-        // Identify duplicate messages (messages that appear more than once)
+        // check for duplicate messages (messages that appear more than once)
         foreach ($errorFrequencies as $message => $count) {
             if ($count > 1) {
                 $duplicateMessages[] = [
@@ -75,18 +74,14 @@ class alarmHistoryController extends Controller
 
     public function importCsvFromFile()
     {
-        // Define the file path
         $filePath = storage_path('app/public/AlarmHistory.csv');
 
-        // Check if the file exists
         if (!file_exists($filePath)) {
             return response()->json(['error' => 'File not found.'], 404);
         }
 
-        // Open the file
         $handle = fopen($filePath, 'r');
 
-        // Read the header
         $header = fgetcsv($handle);
 
         // Map the headers to your table columns (ensure the correct order)
@@ -99,10 +94,9 @@ class alarmHistoryController extends Controller
 
         // Read each row in the file
         while (($row = fgetcsv($handle)) !== false) {
-            // Combine headers and row data
             $data = array_combine($columns, $row);
 
-            // Insert data into the database
+            // Insert data into db
             AlarmHistory::create([
                 'EventTime' => $data['EventTime'],
                 'Message' => $data['Message'],
