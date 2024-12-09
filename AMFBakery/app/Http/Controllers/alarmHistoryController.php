@@ -82,21 +82,23 @@ class alarmHistoryController extends Controller
 
         $handle = fopen($filePath, 'r');
 
-        $header = fgetcsv($handle);
-
-        // Map the headers to your table columns (ensure the correct order)
-        $columns = [
-            'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount', 'AlarmGroup',
-            'Name', 'AlarmState', 'Condition', 'CurrentValue', 'InhibitState', 'LimitValueExceeded',
-            'Priority', 'Severity', 'Tag1Value', 'Tag2Value', 'Tag3Value', 'Tag4Value',
-            'EventCategory', 'Quality', 'Expression'
-        ];
-
-        // Read each row in the file
+        $header = null;
         while (($row = fgetcsv($handle)) !== false) {
-            $data = array_combine($columns, $row);
+            // Skip lines starting with #
+            if (strpos($row[0], '#') === 0) {
+                continue;
+            }
 
-            // Insert data into db
+            // If header has not been set, assign and skip to next iteration
+            if (!$header) {
+                $header = $row;
+                continue;
+            }
+
+            // Map the data to columns
+            $data = array_combine($header, $row);
+
+            // Insert data into the database
             AlarmHistory::create([
                 'EventTime' => $data['EventTime'],
                 'Message' => $data['Message'],
@@ -126,4 +128,5 @@ class alarmHistoryController extends Controller
 
         return response()->json(['message' => 'CSV imported successfully']);
     }
+
 }
