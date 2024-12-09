@@ -17,6 +17,10 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);
+
+//Route::post('/alarm-history/import', [AlarmHistoryController::class, 'importCsv'])->name('alarm-history.import');
+Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
+
 Route::get('/hello', [Welcome::class, "hello"]);
 Route::get('/rdbconversion/upload', [RdbController::class, 'upload']);
 Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert"); 

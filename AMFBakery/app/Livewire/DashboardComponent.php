@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use App\Models\AlarmHistory;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
 use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
@@ -36,19 +37,50 @@ class DashboardComponent extends Component
 
     public function getLineChartModel()
     {
-        return (new LineChartModel())
-            ->setTitle('test linaire grafiek')
-            ->addPoint('test1', 100)
-            ->addPoint('test2', 200)
-            ->addPoint('test3', 300);
+        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
+            ->groupBy('event_date')
+            ->orderBy('event_date')
+            ->get();
+
+        $chart = new LineChartModel();
+        $chart->setTitle('Alarms Over Time');
+
+        foreach ($data as $item) {
+            $chart->addPoint($item->event_date, $item->alarm_count);
+        }
+
+        return $chart;
     }
 
-    public function getPieChartModel(){
-        return(new PieChartModel())
-            ->setTitle("test Cirkeldiagram")
-            ->addSlice('test1', 100, '#f6ad55')
-            ->addSlice('test2', 200, '#fc8181')
-            ->addSlice('test3', 300, '#90cdf4');
+    public function getPieChartModel()
+    {
+        // Fetch the three most common errors and count the rest as "Other"
+        $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->take(3) // Get the top 3 most common errors
+            ->get();
+
+        // Count the rest as "Other"
+        $otherCount = AlarmHistory::select(\DB::raw('COUNT(*) as count'))
+            ->whereNotIn('Message', $data->pluck('Message'))
+            ->value('count');
+
+        // Initialize the pie chart
+        $chart = new PieChartModel();
+        $chart->setTitle('Top 3 Errors with Others');
+
+        // Add slices for the top 3 errors
+        foreach ($data as $item) {
+            $chart->addSlice($item->Message, $item->count, '#'.dechex(rand(0x100000, 0xFFFFFF))); // Random colors
+        }
+
+        // Add a slice for "Other" if there are remaining errors
+        if ($otherCount > 0) {
+            $chart->addSlice('Other', $otherCount, '#cccccc'); // Gray color for "Other"
+        }
+
+        return $chart;
     }
 
 
