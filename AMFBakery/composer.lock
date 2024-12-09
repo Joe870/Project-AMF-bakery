@@ -1120,7 +1120,7 @@
             "name": "laravel/framework",
             "version": "v11.33.2",
             "source": {
-                "type": "git",
+                "type": "git", 
                 "url": "https://github.com/laravel/framework.git",
                 "reference": "6b9832751cf8eed18b3c73df5071f78f0682aa5d"
             },
@@ -1323,6 +1323,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
+
             "time": "2024-11-19T22:47:13+00:00"
         },
         {
@@ -1386,6 +1387,7 @@
         },
         {
             "name": "laravel/serializable-closure",
+
             "version": "v2.0.0",
             "source": {
                 "type": "git",
@@ -1443,6 +1445,7 @@
                 "issues": "https://github.com/laravel/serializable-closure/issues",
                 "source": "https://github.com/laravel/serializable-closure"
             },
+
             "time": "2024-11-19T01:38:44+00:00"
         },
         {
