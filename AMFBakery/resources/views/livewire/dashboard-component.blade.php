@@ -55,7 +55,7 @@ body {
 }
 
 .box-large {
-    grid-column: span 2;
+    grid-column: span 4;
     display: flex;
     flex-direction: column;
     padding: 20px;
@@ -67,7 +67,7 @@ body {
 
 .box-large ul {
     list-style-type: none;
-    color: red;
+    color: #ed2027;
 }
 
 .footer {
@@ -98,28 +98,29 @@ body {
     <div class="container">
 
 
-        <div class="box" onclick="window.location.href='staafdiagram.html'">
+        <div class="box" wire:click="redirectToChart('column')">
             <livewire:livewire-column-chart
             :column-chart-model="$columnChartModel"
             key="{{ $columnChartModel->reactiveKey() }}" />
         </div>
 
 
-        <div class="box" onclick="window.location.href='lineairegrafiek.html'">
+        <div class="box" wire:click="redirectToChart('line')">
             <livewire:livewire-line-chart
-            :line-chart-model="$lineChartModel"
-            key="{{ $lineChartModel->reactiveKey() }}" />
+                :line-chart-model="$lineChartModel"
+                key="{{ $lineChartModel->reactiveKey() }}" />
         </div>
 
-        <div class="box" onclick="window.location.href='cirkeldiagram.html'">
+        <div class="box" wire:click="redirectToChart('pie')">
             <livewire:livewire-pie-chart
-            :pie-chart-model="$pieChartModel"
-            key="{{ $pieChartModel->reactiveKey() }}" />
+                :pie-chart-model="$pieChartModel"
+                key="{{ $pieChartModel->reactiveKey() }}" />
         </div>
-        
+
+<!--         
         <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
             <p>Klik op een section button hieronder</p>
-        </div>
+        </div> -->
 
         <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
             <h2>Alle Errors</h2>
@@ -130,13 +131,13 @@ body {
             </ul>
 
         </div>
-        
+<!--         
         <div class="footer" >
             <button onclick="updateSmallBox('Section 1 Content')">Section 1</button>
             <button onclick="updateSmallBox('Section 2 Content')">Section 2</button>
             <button onclick="updateSmallBox('Section 3 Content')">Section 3</button>
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
-        </div>
+        </div> -->
     </div>
     
 
