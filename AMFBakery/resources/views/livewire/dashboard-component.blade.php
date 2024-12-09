@@ -1,6 +1,6 @@
 
 <div>
-    
+
     <style>
     * {
     box-sizing: border-box;
@@ -9,7 +9,7 @@
 }
 
 body {
-    width: 100%;
+    max-width: 100%;
 
     display: flex;
     flex-direction: column;
@@ -24,7 +24,7 @@ body {
     grid-template-rows: repeat(2, 200px);
     gap: 20px;
     margin: 20px;
-    width: 100%;
+    max-width: 100%;
 }
 
 .box, .box-large {
@@ -95,7 +95,7 @@ body {
     </style>
 
 
-    
+
     <div class="container">
 
 
@@ -117,7 +117,7 @@ body {
             :pie-chart-model="$pieChartModel"
             key="{{ $pieChartModel->reactiveKey() }}" />
         </div>
-        
+
         <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
             <p>Klik op een section button hieronder</p>
         </div>
@@ -131,7 +131,7 @@ body {
             </ul>
 
         </div>
-        
+
         <div class="footer" >
             <button onclick="updateSmallBox('Section 1 Content')">Section 1</button>
             <button onclick="updateSmallBox('Section 2 Content')">Section 2</button>
@@ -139,15 +139,15 @@ body {
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
         </div>
     </div>
-    
+
 
     <script>
         function updateSmallBox(content) {
             document.getElementById('small-dynamic-box').innerHTML = `<p>${content}</p>`;
         }
-        
 
-        
+
+
 
     </script>
 </div>
