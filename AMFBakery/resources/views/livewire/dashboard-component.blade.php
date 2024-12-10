@@ -1,6 +1,6 @@
 
 <div>
-    
+
     <style>
     * {
     box-sizing: border-box;
@@ -94,7 +94,7 @@ body {
     </style>
 
 
-    
+
     <div class="container">
 
 
@@ -117,7 +117,7 @@ body {
                 key="{{ $pieChartModel->reactiveKey() }}" />
         </div>
 
-<!--         
+
         <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
             <p>Klik op een section button hieronder</p>
         </div> -->
@@ -131,7 +131,6 @@ body {
             </ul>
 
         </div>
-<!--         
         <div class="footer" >
             <button onclick="updateSmallBox('Section 1 Content')">Section 1</button>
             <button onclick="updateSmallBox('Section 2 Content')">Section 2</button>
@@ -139,15 +138,15 @@ body {
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
         </div> -->
     </div>
-    
+
 
     <script>
         function updateSmallBox(content) {
             document.getElementById('small-dynamic-box').innerHTML = `<p>${content}</p>`;
         }
-        
 
-        
+
+
 
     </script>
 </div>
