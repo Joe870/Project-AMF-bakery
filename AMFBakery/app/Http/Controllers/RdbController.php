@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ConvertRDBToCSV;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
@@ -50,5 +51,15 @@ class RdbController extends Controller
     public function upload(Request $request)
     {
         return view("rdbconversion.upload");
+    }
+
+    public function uploadFile(Request $request)
+    {
+        $file = $request->file('rdb_file');
+        $filePath = $file->store('uploads');
+        
+        ConvertRDBToCSV::dispatch(storage_path("app/{$filePath}"));
+
+        return back()->with('message', 'File uploaded and conversion started!');
     }
 }
