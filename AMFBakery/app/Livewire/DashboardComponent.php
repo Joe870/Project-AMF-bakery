@@ -54,34 +54,42 @@ class DashboardComponent extends Component
 
     public function getPieChartModel()
     {
-        // Fetch the three most common errors and count the rest as "Other"
-        $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-            ->groupBy('Message')
-            ->orderByDesc('count')
-            ->take(3) // Get the top 3 most common errors
-            ->get();
+        $filter = request()->query('filter');
 
-        // Count the rest as "Other"
-        $otherCount = AlarmHistory::select(\DB::raw('COUNT(*) as count'))
-            ->whereNotIn('Message', $data->pluck('Message'))
-            ->value('count');
+        //Als er een filter is aangegeven pak alle errors met die filter
+        if ($filter) {
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->where('Message', 'LIKE', "%{$filter}%")
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->get();
+        } else {
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->take(3)
+                ->get();
 
-        // Initialize the pie chart
-        $chart = new PieChartModel();
-        $chart->setTitle('Top 3 Errors with Others');
-
-        // Add slices for the top 3 errors
-        foreach ($data as $item) {
-            $chart->addSlice($item->Message, $item->count, '#'.dechex(rand(0x100000, 0xFFFFFF))); // Random colors
+            $otherCount = AlarmHistory::select(\DB::raw('COUNT(*) as count'))
+                ->whereNotIn('Message', $data->pluck('Message'))
+                ->value('count');
         }
 
-        // Add a slice for "Other" if there are remaining errors
-        if ($otherCount > 0) {
-            $chart->addSlice('Other', $otherCount, '#cccccc'); // Gray color for "Other"
+        // Maak de PieChart
+        $chart = new PieChartModel();
+        $chart->setTitle('Errors with {$filter}');
+
+        foreach ($data as $item) {
+            $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+        }
+
+        if (isset($otherCount) && $otherCount > 0) {
+            $chart->addSlice('Other', $otherCount, '#cccccc');
         }
 
         return $chart;
     }
+
 
 
     public function render()
