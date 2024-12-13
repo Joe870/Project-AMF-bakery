@@ -1,11 +1,11 @@
 
 <div>
-    
-    <style>
-    * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+
+<style>
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
 }
 
 body {
@@ -26,7 +26,7 @@ body {
     max-width: 100%
 }
 
-.box, .box-large {
+.box, .box-large, .pie-box {
     background-color: #e0e0e0;
     border: 4px solid #ff6666;
     display: flex;
@@ -72,13 +72,31 @@ body {
 
 #box{
     grid-column: span 1;
+
+}
+
+.pie-box{
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+.pie-box:hover{
+    background-color: #D6D4D4;
+    border: 4px solid #000000;
+    border-radius: 30px;
+}
+
+#pie-box{
+    grid-column: span 1;
 }
 
 .box-large {
-    grid-column: span 2;
+    grid-column: span 1;
+    grid-row: span 2;
     display: flex;
     flex-direction: column;
     padding: 20px;
+    
 }
 
 .box-large h2 {
@@ -111,7 +129,7 @@ body {
 
 }
 
-    </style>
+</style>
 
 
 <div class="filter-section">
@@ -125,50 +143,60 @@ body {
 </div>
 
 
-    
+<div>
+    <input type="text" wire:model="searchTerm" placeholder="Search for an error..." />
+    <button wire:click="search">Search</button>
+</div>
+
     <div class="container">
 
 
 
-        <div class="box" onclick="window.location.href='staafdiagram.html'">
+        <div class="box" wire:click="redirectToChart('column')">
             <livewire:livewire-column-chart
             :column-chart-model="$columnChartModel"
             key="{{ $columnChartModel->reactiveKey() }}" />
         </div>
 
 
-        <div class="box" onclick="window.location.href='lineairegrafiek.html'">
-            <livewire:livewire-line-chart
-            :line-chart-model="$lineChartModel"
-            key="{{ $lineChartModel->reactiveKey() }}" />
-        </div>
 
-        <div class="box" onclick="window.location.href='cirkeldiagram.html'">
-            <livewire:livewire-pie-chart
-            :pie-chart-model="$pieChartModel"
-            key="{{ $pieChartModel->reactiveKey() }}" />
-        </div>
         
-        <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
-            <p>Klik op een section button hieronder</p>
-        </div>
-
         <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
             <h2>Alle Errors</h2>
             <ul>
-                @foreach ($errors as $error)
+                @foreach ($top3errors as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
 
         </div>
+
         
-        <div class="footer" >
+    <div class="pie-box" wire:click="redirectToChart('pie')">
+            <livewire:livewire-pie-chart
+            :pie-chart-model="$pieChartModel"
+            key="{{ $pieChartModel->reactiveKey() }}" />
+        </div>
+
+
+        <div class="box" wire:click="redirectToChart('line')">
+            <livewire:livewire-line-chart
+                :line-chart-model="$lineChartModel"
+                key="{{ $lineChartModel->reactiveKey() }}" />
+
+
+        </div>
+<!-- 
+        <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
+            <p>Klik op een section button hieronder</p>
+        </div>  -->
+
+        <!-- <div class="footer" >
             <button onclick="updateSmallBox('Section 1 Content')">Section 1</button>
             <button onclick="updateSmallBox('Section 2 Content')">Section 2</button>
             <button onclick="updateSmallBox('Section 3 Content')">Section 3</button>
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
-        </div>
+        </div>  -->
     </div>
     
 
@@ -176,9 +204,6 @@ body {
         function updateSmallBox(content) {
             document.getElementById('small-dynamic-box').innerHTML = `<p>${content}</p>`;
         }
-        
-
-        
 
     </script>
 </div>
