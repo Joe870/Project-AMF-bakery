@@ -132,17 +132,6 @@ body {
 </style>
 
 
-<div class="filter-section">
-    <select id="filteren">
-        <option value="">filteren op</option>
-    </select>
-    <button>OK</button>
-
-    <input type="text" class="Zoekwoorden" placeholder="Filteren op zoekwoord">
-    <button>OK</button>
-</div>
-
-
 <div>
     <input type="text" wire:model="searchTerm" placeholder="Search for an error..." />
     <button wire:click="search">Search</button>

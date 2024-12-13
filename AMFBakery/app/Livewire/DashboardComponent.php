@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\LineChartModel;
+use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
+use App\Livewire\DashboardComponent;
+use App\Models\AlarmHistory;
 
 class DashboardComponent extends Component
 {
@@ -71,12 +73,21 @@ class DashboardComponent extends Component
 
     public function getLineChartModel()
     {
-        return (new LineChartModel())
-            ->setTitle('test linaire grafiek')
-            ->addPoint('test1', 100)
-            ->addPoint('test2', 200)
-            ->addPoint('test3', 300);
+        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
+            ->groupBy('event_date')
+            ->orderBy('event_date')
+            ->get();
+    
+        $chart = new LineChartModel();
+        $chart->setTitle('Alarms Over Time');
+    
+        foreach ($data as $item) {
+            $chart->addPoint((string) $item->event_date, (int) $item->alarm_count);
+        }
+    
+        return $chart;
     }
+    
     
     public function getPieChartModel()
     {
