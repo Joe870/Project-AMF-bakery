@@ -28,22 +28,62 @@ class DashboardComponent extends Component
 
     public function getColumnChartModel()
     {
-        return (new ColumnChartModel())
-            ->setTitle('test staafdiagram')
-            ->addColumn('test1', 100, '#f6ad55')
-            ->addColumn('test2', 200, '#fc8181')
-            ->addColumn('test3', 300, '#90cdf4');
+        $filter = request()->query('filter');
+
+        if ($filter){
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->where('Message', 'LIKE', "%{$filter}%")
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->get();
+
+                $chart = new LineChartModel();
+                $chart->setTitle('Alarms Over Time from {filter}');
+        } else
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->get();
+
+            $chart = new ColumnChartModel();
+            $chart->setTitle('Errors with priority');
+        
+        foreach ($data as $item) {
+            $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+        }
+        
+        if (isset($otherCount) && $otherCount > 0) {
+            $chart->addColumn('Other', $otherCount, '#cccccc');
+        }
+
+        return $chart;
     }
 
     public function getLineChartModel()
     {
-        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
+        $filter = request()->query('filter');
+
+        if ($filter) {
+            //Select de data die aan de filter voldoet
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->where('Message', 'LIKE', "%{$filter}%")
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->get();
+
+                $chart = new LineChartModel();
+                $chart->setTitle('Alarms Over Time from {filter}');//Verbeter zodat de $filter goed word gelaten zien
+
+        } else {
+            //Select algemene data [Bespreek nog wat de standaard setting voor deze chart word]
+            $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
             ->groupBy('event_date')
             ->orderBy('event_date')
             ->get();
 
-        $chart = new LineChartModel();
-        $chart->setTitle('Alarms Over Time');
+            $chart = new LineChartModel();
+            $chart->setTitle('Alarms Over Time');
+        }
 
         foreach ($data as $item) {
             $chart->addPoint($item->event_date, $item->alarm_count);
@@ -56,14 +96,15 @@ class DashboardComponent extends Component
     {
         $filter = request()->query('filter');
 
-        //Als er een filter is aangegeven pak alle errors met die filter
         if ($filter) {
+            //Select de data die aan de filter voldoet
             $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
                 ->where('Message', 'LIKE', "%{$filter}%")
                 ->groupBy('Message')
                 ->orderByDesc('count')
                 ->get();
         } else {
+            //Select algemene data
             $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
@@ -77,7 +118,7 @@ class DashboardComponent extends Component
 
         // Maak de PieChart
         $chart = new PieChartModel();
-        $chart->setTitle('Errors with {$filter}');
+        $chart->setTitle('Errors with ');//Verbeter dit zodat je de $filter ziet
 
         foreach ($data as $item) {
             $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));

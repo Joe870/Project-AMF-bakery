@@ -16,7 +16,7 @@
     @livewireScripts
     @livewireChartsScripts
 </div>
-<form action="column.blade.php" method="GET">
+<form action="/dashboard/column-chart" method="GET">
     <input type="text" name="filter" placeholder="Enter filter" required><br>
     <button type="submit">Submit</button>
 </form>
