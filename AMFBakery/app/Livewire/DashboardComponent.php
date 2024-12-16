@@ -5,13 +5,13 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\AlarmHistory;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
-use App\Livewire\DashboardComponent;
+//use App\Livewire\DashboardComponent;
 
 class DashboardComponent extends Component
 {
-    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789']; 
+    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789'];
 
 
     public function redirectToChart($chartType)
@@ -28,11 +28,21 @@ class DashboardComponent extends Component
 
     public function getColumnChartModel()
     {
-        return (new ColumnChartModel())
-            ->setTitle('test staafdiagram')
-            ->addColumn('test1', 100, '#f6ad55')
-            ->addColumn('test2', 200, '#fc8181')
-            ->addColumn('test3', 300, '#90cdf4');
+
+
+        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
+            ->groupBy('event_date')
+            ->orderBy('event_date')
+            ->get();
+
+        $chart = new ColumnChartModel();
+        $chart->setTitle('Alarms Over Time');
+
+        foreach ($data as $item) {
+            $chart->addColumn((string) $item->event_date, (int) $item->alarm_count, '#'.dechex(rand(0x100000, 0xFFFFFF)));
+        }
+        return $chart;
+
     }
 
     public function getLineChartModel()
