@@ -70,23 +70,43 @@ class DashboardComponent extends Component
 
         return $chart;
     }
-
+    
+    
     public function getLineChartModel()
     {
-        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
-            ->groupBy('event_date')
-            ->orderBy('event_date')
-            ->get();
+        $searchTerm = strtolower(trim($this->searchTerm));
+    
+        if ($searchTerm != '') {
+            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
+                ->select('Message', \DB::raw('COUNT(*) as count'))
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->get();
+        } else {
+            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->take(10) 
+                ->get();
+        }
     
         $chart = new LineChartModel();
-        $chart->setTitle('Alarms Over Time');
     
+        $counter = 1; 
         foreach ($data as $item) {
-            $chart->addPoint((string) $item->event_date, (int) $item->alarm_count);
+            $shortLabel = strlen($item->Message) > 15 ? substr($item->Message, 0, 12) . '...' : $item->Message;
+    
+            $chart->addPoint($shortLabel, (int) $item->count, [
+                'tooltip' => $item->Message . ': ' . $item->count . ' times', 
+            ]);
+            
+            $counter++;
         }
     
         return $chart;
     }
+    
+    
     
     
     public function getPieChartModel()
@@ -129,7 +149,6 @@ class DashboardComponent extends Component
     
         return $chart;
     }
-        
 
     public function render()
     {
