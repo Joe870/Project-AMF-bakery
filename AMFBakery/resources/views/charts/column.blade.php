@@ -7,20 +7,18 @@
     @livewireStyles
     @include('includes/navbar')
     <link rel="stylesheet" href="{{ asset('css/charts.css') }}">
-
-
 </head>
-
 <body>
-
 <div class="chart-container">
-
     <livewire:livewire-column-chart
-    
     :column-chart-model="$columnChartModel"
     key="{{ $columnChartModel->reactiveKey() }}" />
     @livewireScripts
     @livewireChartsScripts
 </div>
+<form action="/dashboard/column-chart" method="GET">
+    <input type="text" name="filter" placeholder="Enter filter" required><br>
+    <button type="submit">Submit</button>
+</form>
 </body>
 </html>
