@@ -11,14 +11,8 @@
 </head>
 
 <body>
-    
-
 <div class="chart-container">
 
-<div>
-    <input type="text" wire:model="searchTerm" placeholder="Search for an error..." />
-    <button wire:click="search">Search</button>
-</div>
     <livewire:livewire-pie-chart
     
     :pie-chart-model="$pieChartModel"

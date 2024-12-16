@@ -20,11 +20,13 @@ body {
 .container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 200px);
+    grid-template-rows: repeat(2, 300px);  /* Increased row height */
     gap: 20px;
-    margin: 20px;
-    max-width: 100%
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
+
 
 .box, .box-large, .pie-box {
     background-color: #e0e0e0;
