@@ -18,5 +18,7 @@ require __DIR__.'/auth.php';
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);
 Route::get('/hello', [Welcome::class, "hello"]);
-Route::get('/rdbconversion/upload', [RdbController::class, 'upload']);
+Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile']);
+Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
 Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert"); 
+Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');

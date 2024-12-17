@@ -48,18 +48,50 @@ class RdbController extends Controller
         }
     }
 
-    public function upload(Request $request)
-    {
-        return view("rdbconversion.upload");
-    }
 
     public function uploadFile(Request $request)
     {
+       
+    $request->validate([
+        'rdb_file' => 'required|file|max:2048',
+    ]);
+    if ($request->file('rdb_file')->isValid()){
+        $filePath = $request->file('rdb_file')->store('uploads', 'public');
+        return back()->with('success', 'File uploaded succesfully')->with('file', $filePath);
+    }
+    return back()->with('error', 'File upload failed');
+    // $file = $request->file('rdb_file');
+    // $filePath = $file->store('uploads', 'local');
+    // Storage::disk('local')->put($request, 'Contents');
+
+    // if (!$file) {
+    //     return back()->withErrors('File upload failed.');
+    // }
+
+    // ConvertRDBToCSV::dispatch(storage_path("app/{$filePath}"));
+
+    // return back()->with('message', 'File uploaded and conversion started!');
+    }
+
+    public function showFiles()
+    {
+        $files = Storage::files('public/csv_outputs');
+
+        return view("rdbconversion.upload", ['files' => $files]);
+    }
+
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'rdb_file' => 'required|file|mimes:rdb|max:2048',
+        ]);
+
         $file = $request->file('rdb_file');
+
         $filePath = $file->store('uploads');
-        
+
         ConvertRDBToCSV::dispatch(storage_path("app/{$filePath}"));
 
-        return back()->with('message', 'File uploaded and conversion started!');
+        return redirect()->route('files.list')->with('message', 'File uploaded and conversion started!');
     }
 }
