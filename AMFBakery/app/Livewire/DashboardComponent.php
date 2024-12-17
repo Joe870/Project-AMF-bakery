@@ -5,13 +5,13 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\AlarmHistory;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
-use App\Livewire\DashboardComponent;
+//use App\Livewire\DashboardComponent;
 
 class DashboardComponent extends Component
 {
-    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789']; 
+    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789'];
 
 
     public function redirectToChart($chartType)
@@ -47,11 +47,11 @@ class DashboardComponent extends Component
 
             $chart = new ColumnChartModel();
             $chart->setTitle('Errors with priority');
-        
+
         foreach ($data as $item) {
             $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
-        
+
         if (isset($otherCount) && $otherCount > 0) {
             $chart->addColumn('Other', $otherCount, '#cccccc');
         }
