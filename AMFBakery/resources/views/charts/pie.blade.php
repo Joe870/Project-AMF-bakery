@@ -14,7 +14,7 @@
 <div class="chart-container">
 
     <livewire:livewire-pie-chart
-    
+
     :pie-chart-model="$pieChartModel"
     key="{{ $pieChartModel->reactiveKey() }}" />
     @livewireScripts

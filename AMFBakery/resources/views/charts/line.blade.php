@@ -15,7 +15,7 @@
 <div class="chart-container">
 
     <livewire:livewire-line-chart
-    
+
     :line-chart-model="$lineChartModel"
     key="{{ $lineChartModel->reactiveKey() }}" />
     @livewireScripts

@@ -17,5 +17,3 @@ class AlarmHistory extends Model
         'Quality', 'Expression',
     ];
 }
-
-

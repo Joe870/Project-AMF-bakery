@@ -3,20 +3,47 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\AlarmHistory;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
-use App\Livewire\DashboardComponent;
+use App\Models\AlarmHistory;
 
 class DashboardComponent extends Component
 {
-    public $errors = ['ERROR 123', 'ERROR 456', 'ERROR 789']; 
+
+    public $searchTerm = '';
+    public $errorMessage = '';
+
+    public function search()
+    {
+        $this->errorMessage = '';
+        if (empty($this->searchTerm)) {
+            $this->errorMessage = 'Please enter a search term.';
+            return;
+        }
+
+        $this->getFilteredErrors();
+    }
+
+    private function getFilteredErrors()
+    {
+        $errors = AlarmHistory::where('Message', 'LIKE', '%' . $this->searchTerm . '%')
+            ->select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->pluck('Message')
+            ->toArray();
+
+        if (empty($errors)) {
+            $this->errorMessage = 'No results found for "' . $this->searchTerm . '". Please try another term.';
+        }
+
+        $this->errors = $errors;
+    }
 
 
     public function redirectToChart($chartType)
     {
-        // De juiste route bepalen op basis van het grafiektype
         if ($chartType == 'column') {
             return redirect()->route('charts.column');
         } elseif ($chartType == 'line') {
@@ -47,11 +74,11 @@ class DashboardComponent extends Component
 
             $chart = new ColumnChartModel();
             $chart->setTitle('Errors with priority');
-        
+
         foreach ($data as $item) {
             $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
-        
+
         if (isset($otherCount) && $otherCount > 0) {
             $chart->addColumn('Other', $otherCount, '#cccccc');
         }
@@ -92,52 +119,75 @@ class DashboardComponent extends Component
         return $chart;
     }
 
+
+
+
     public function getPieChartModel()
     {
-        $filter = request()->query('filter');
+        $searchTerm = strtolower(trim($this->searchTerm));
 
-        if ($filter) {
-            //Select de data die aan de filter voldoet
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->where('Message', 'LIKE', "%{$filter}%")
+        if ($searchTerm != '') {
+            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
+                ->select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
                 ->get();
+
+            $otherCount = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
+                ->whereNotIn('Message', $data->pluck('Message'))
+                ->select(\DB::raw('COUNT(*) as count'))
+                ->value('count');
         } else {
-            //Select algemene data
             $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
                 ->take(3)
                 ->get();
 
-            $otherCount = AlarmHistory::select(\DB::raw('COUNT(*) as count'))
-                ->whereNotIn('Message', $data->pluck('Message'))
+            $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
+                ->select(\DB::raw('COUNT(*) as count'))
                 ->value('count');
         }
 
-        // Maak de PieChart
         $chart = new PieChartModel();
-        $chart->setTitle('Errors with ');//Verbeter dit zodat je de $filter ziet
+        $chart->setTitle('Top 3 Errors with Others');
 
         foreach ($data as $item) {
             $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
 
-        if (isset($otherCount) && $otherCount > 0) {
+        if ($otherCount > 0) {
             $chart->addSlice('Other', $otherCount, '#cccccc');
         }
 
         return $chart;
     }
 
-
-
     public function render()
     {
+        $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->take(3)
+            ->pluck('Message')
+            ->toArray();
+
         $columnChartModel = $this->getColumnChartModel();
         $lineChartModel = $this->getLineChartModel();
         $pieChartModel = $this->getPieChartModel();
-        return view('livewire.dashboard-component', compact('columnChartModel', 'lineChartModel', 'pieChartModel'));
+
+        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
