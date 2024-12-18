@@ -49,7 +49,7 @@ body {
     gap: 10px; /* Add spacing between items */
 }
 
-.filter-section select, 
+.filter-section select,
 .filter-section input {
     margin: 0; /* Remove any default margin */
     padding: 5px 10px; /* Optional: Adjust padding for better spacing */
@@ -98,7 +98,7 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    
+
 }
 
 .box-large h2 {
@@ -151,7 +151,7 @@ body {
 
 
 
-        
+
         <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
             <h2>Alle Errors</h2>
             <ul>
@@ -162,7 +162,7 @@ body {
 
         </div>
 
-        
+
     <div class="pie-box" wire:click="redirectToChart('pie')">
             <livewire:livewire-pie-chart
             :pie-chart-model="$pieChartModel"
@@ -177,7 +177,7 @@ body {
 
 
         </div>
-<!-- 
+<!--
         <div id="small-dynamic-box" class="box"onclick="window.location.href='sections.html'">
             <p>Klik op een section button hieronder</p>
         </div>  -->
@@ -189,7 +189,7 @@ body {
             <button onclick="updateSmallBox('Section 4 Content')">Section 4</button>
         </div>  -->
     </div>
-    
+
 
     <script>
         function updateSmallBox(content) {

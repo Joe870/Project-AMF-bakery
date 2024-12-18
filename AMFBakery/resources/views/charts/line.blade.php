@@ -15,11 +15,15 @@
 <div class="chart-container">
 
     <livewire:livewire-line-chart
-    
+
     :line-chart-model="$lineChartModel"
     key="{{ $lineChartModel->reactiveKey() }}" />
     @livewireScripts
     @livewireChartsScripts
 </div>
+<form action="/dashboard/line-chart" method="GET">
+    <input type="text" name="filter" placeholder="Enter filter" required><br>
+    <button type="submit">Submit</button>
+</form>
 </body>
 </html>
