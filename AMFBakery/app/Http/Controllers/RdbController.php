@@ -15,17 +15,17 @@ class RdbController extends Controller
         {
             // Validate the file upload
             $request->validate([
-                'rdb_file' => 'required|file|mimes:rdb',
+                'rdb_file' => 'required|file|',
             ]);
     
             // Store the uploaded file
-            $path = $request->file('rdb_file')->store('rdb_files');
+            $path = $request->file('rdb_file')->store('uploads', 'public');
     
             // Get the full path of the file
-            $fullPath = storage_path('app/' . $path);
+            $fullPath = storage_path('app/public/uploads' . $path);
     
             // Define output directory for CSV files
-            $outputDir = storage_path('app/csv_outputs');
+            $outputDir = storage_path('app/public/csv_outputs');
             if (!file_exists($outputDir)) {
                 mkdir($outputDir, 0755, true);
             }
@@ -53,24 +53,13 @@ class RdbController extends Controller
     {
        
     $request->validate([
-        'rdb_file' => 'required|file|max:2048',
+        'rdb_file' => 'required|file',
     ]);
     if ($request->file('rdb_file')->isValid()){
         $filePath = $request->file('rdb_file')->store('uploads', 'public');
         return back()->with('success', 'File uploaded succesfully')->with('file', $filePath);
     }
     return back()->with('error', 'File upload failed');
-    // $file = $request->file('rdb_file');
-    // $filePath = $file->store('uploads', 'local');
-    // Storage::disk('local')->put($request, 'Contents');
-
-    // if (!$file) {
-    //     return back()->withErrors('File upload failed.');
-    // }
-
-    // ConvertRDBToCSV::dispatch(storage_path("app/{$filePath}"));
-
-    // return back()->with('message', 'File uploaded and conversion started!');
     }
 
     public function showFiles()
