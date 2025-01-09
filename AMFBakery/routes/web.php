@@ -21,7 +21,7 @@ Route::view('profile', 'profile')
 // Test route (voorbeeld controller)
 Route::get("/test", [TestController::class, "index"]);
 
-// CSV-weergave route
+// CSV-weergave route met filtermogelijkheid
 Route::get('/csv', [alarmHistoryController::class, 'show'])->name('csv.show');
 
 // Bestand uploaden via formulier
