@@ -55,32 +55,44 @@ class DashboardComponent extends Component
 
     public function getColumnChartModel()
     {
+        // Pak filter en urgent-status indien aangegeven
         $filter = request()->query('filter');
+        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
 
-        if ($filter){
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->where('Message', 'LIKE', "%{$filter}%")
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
+        // Begin met de query
+        $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
 
-                $chart = new LineChartModel();
-                $chart->setTitle('Alarms Over Time from {filter}');
-        } else
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
-
-            $chart = new ColumnChartModel();
-            $chart->setTitle('Errors with priority');
-
-        foreach ($data as $item) {
-            $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+        // Voeg urgent-filter toe als urgent is aangevinkt
+        if ($isUrgent) {
+            $query->where('priority', 'Urgent');
         }
 
-        if (isset($otherCount) && $otherCount > 0) {
-            $chart->addColumn('Other', $otherCount, '#cccccc');
+        // Voeg filter toe als er een filter is
+        if ($filter) {
+            $query->where('Message', 'LIKE', "%{$filter}%");
+        }
+
+        // Haal data op en groepeer op Message
+        $data = $query->groupBy('Message')
+                    ->orderByDesc('count')
+                    ->get();
+
+        $chart = new ColumnChartModel();
+
+        // Stel de titel in afhankelijk van de filters
+        if ($isUrgent && $filter) {
+            $chart->setTitle('Urgent Errors with Filter');
+        } elseif ($isUrgent) {
+            $chart->setTitle('Urgent Errors');
+        } elseif ($filter) {
+            $chart->setTitle('Errors with Filter');
+        } else {
+            $chart->setTitle('All Errors');
+        }
+
+        //Voeg data toe aan de chart
+        foreach ($data as $item) {
+            $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
 
         return $chart;
@@ -88,30 +100,45 @@ class DashboardComponent extends Component
 
     public function getLineChartModel()
     {
+        // Pak filter en urgent-status indien aangegeven
         $filter = request()->query('filter');
+        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
 
+        // Begin met een basisquery
+        $query = AlarmHistory::select(
+            \DB::raw('DATE(EventTime) as event_date'),
+            \DB::raw('COUNT(*) as alarm_count')
+        );
+
+        // Voeg urgent-filter toe als urgent is aangevinkt
+        if ($isUrgent) {
+            $query->where('priority', 'Urgent');
+        }
+
+        // Voeg filter toe als er een filter is
         if ($filter) {
-            //Select de data die aan de filter voldoet
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->where('Message', 'LIKE', "%{$filter}%")
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
+            $query->where('Message', 'LIKE', "%{$filter}%");
+        }
 
-                $chart = new LineChartModel();
-                $chart->setTitle('Alarms Over Time from {filter}');//Verbeter zodat de $filter goed word gelaten zien
+        // Haal data op en groepeer op event_date
+        $data = $query->groupBy('event_date')
+                    ->orderBy('event_date')
+                    ->get();
 
+        $chart = new LineChartModel();
+
+        // Stel de titel in afhankelijk van de filters
+        if ($isUrgent && $filter) {
+            $chart->setTitle("Urgent Alarms Over Time for '{$filter}'");
+        } elseif ($isUrgent) {
+            $chart->setTitle('Urgent Alarms Over Time');
+        } elseif ($filter) {
+            $chart->setTitle("Alarms Over Time for '{$filter}'");
         } else {
-            //Select algemene data [Bespreek nog wat de standaard setting voor deze chart word]
-            $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
-            ->groupBy('event_date')
-            ->orderBy('event_date')
-            ->get();
-
-            $chart = new LineChartModel();
             $chart->setTitle('Alarms Over Time');
         }
 
+        // Voeg data toe aan de chart
         foreach ($data as $item) {
             $chart->addPoint($item->event_date, $item->alarm_count);
         }
@@ -122,63 +149,69 @@ class DashboardComponent extends Component
 
 
 
+
     public function getPieChartModel()
     {
-        $searchTerm = strtolower(trim($this->searchTerm));
+        // Pak filter en urgent-status indien aangegeven
+        $filter = request()->query('filter');
+        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
 
-        if ($searchTerm != '') {
-            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
+        // Begin met de query
+        $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
 
-            $otherCount = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
-        } else {
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(3)
-                ->get();
-
-            $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
+        // Voeg urgent-filter toe als urgent is aangevinkt
+        if ($isUrgent) {
+            $query->where('priority', 'Urgent');
         }
+
+        // Voeg filter toe als er een filter is
+        if ($filter) {
+            $query->where('Message', 'LIKE', "%{$filter}%");
+        }
+
+        // Haal data op en groepeer op Message
+        $data = $query->groupBy('Message')
+                    ->orderByDesc('count')
+                    ->get();
 
         $chart = new PieChartModel();
-        $chart->setTitle('Top 3 Errors with Others');
 
-        foreach ($data as $item) {
-            $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+        // Stel de titel in afhankelijk van de filters
+        if ($isUrgent && $filter) {
+            $chart->setTitle('Urgent Errors with Filter');
+        } elseif ($isUrgent) {
+            $chart->setTitle('Urgent Errors');
+        } elseif ($filter) {
+            $chart->setTitle('Errors with Filter');
+        } else {
+            $chart->setTitle('All Errors');
         }
 
-        if ($otherCount > 0) {
-            $chart->addSlice('Other', $otherCount, '#cccccc');
+        // Voeg data toe aan de chart
+        foreach ($data as $item) {
+            $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
 
         return $chart;
     }
 
-    public function render()
-    {
-        $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-            ->groupBy('Message')
-            ->orderByDesc('count')
-            ->take(3)
-            ->pluck('Message')
-            ->toArray();
 
-        $columnChartModel = $this->getColumnChartModel();
-        $lineChartModel = $this->getLineChartModel();
-        $pieChartModel = $this->getPieChartModel();
+        public function render()
+        {
+            $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+                ->groupBy('Message')
+                ->orderByDesc('count')
+                ->take(3)
+                ->pluck('Message')
+                ->toArray();
 
-        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
+            $columnChartModel = $this->getColumnChartModel();
+            $lineChartModel = $this->getLineChartModel();
+            $pieChartModel = $this->getPieChartModel();
+
+            return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
+        }
     }
-}
 
 
 
