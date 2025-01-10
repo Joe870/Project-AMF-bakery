@@ -3,7 +3,7 @@
  <head>
     <title>display if upload was succesfol</title>
 </head>
-        
+
 <body>
     @if(session('success'))
         <p>{{ session('success') }}</p>

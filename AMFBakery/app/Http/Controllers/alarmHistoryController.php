@@ -84,68 +84,61 @@ class alarmHistoryController extends Controller
         return response()->json(['message' => 'CSV data saved to the database successfully!'], 200);
     }
 
-//    public function show()
-//    {
-//        $filePath = storage_path('app/public/AlarmHistory.csv');
-//
-//        if (!file_exists($filePath)) {
-//            abort(404, 'File not found');
-//        }
-//
-//        $handle = fopen($filePath, 'r');
-//        $data = [];
-//        $errorCount = 0;
-//        $errorFrequencies = [];
-//        $duplicateMessages = [];
-//        $chunkSize = 1000;
-//        $otherData = 6;
-//        $chunkSize += $otherData;
-//        $messages = []; // To track all messages across rows
-//
-//        // Read header row
-//        $header = fgetcsv($handle);
-//        if ($header) {
-//            $data[] = $header; // Store header in $data
-//        }
-//
-//        // Loop through CSV rows
-//        while (($row = fgetcsv($handle)) !== false) {
-//            $data[] = $row;
-//
-//            // Assume message (error details) is in a specific column (index 1 for 'Message')
-//            $messageColumnIndex = 1; // Adjust based on your CSV structure (Message column)
-//
-//            if (isset($row[$messageColumnIndex]) && !empty($row[$messageColumnIndex])) {
-//                $message = trim($row[$messageColumnIndex]);
-//
-//                // Count total occurrences of each message
-//                $messages[] = $message;
-//                $errorCount++;
-//
-//                // Count the frequency of each message
-//                if (isset($errorFrequencies[$message])) {
-//                    $errorFrequencies[$message]++;
-//                } else {
-//                    $errorFrequencies[$message] = 1;
-//                }
-//                if (count($data) >= $chunkSize) {
-//                    break;
-//                }
-//            }
-//        }
-//
-//        fclose($handle);
-//
-//        // Identify duplicate messages (messages that appear more than once)
-//        foreach ($errorFrequencies as $message => $count) {
-//            if ($count > 1) {
-//                $duplicateMessages[] = [
-//                    'message' => $message,
-//                    'count' => $count
-//                ];
-//            }
-//        }
-//
-//        return view('csv.show', compact('data', 'errorCount', 'errorFrequencies', 'duplicateMessages'));
-//    }
+    public function importCsvFromFile()
+    {
+        $filePath = storage_path('app/public/uploads/WIzIWRF9CFcvWmOukqiEWowrymz8JtsMrB3vrA5l.csv');
+
+        if (!file_exists($filePath)) {
+//            dd($filePath);
+            return response()->json(['error' => 'File not found.'], 404);
+        }
+
+        $handle = fopen($filePath, 'r');
+
+        $header = null;
+        while (($row = fgetcsv($handle)) !== false) {
+            // Skip lines starting with #
+            if (strpos($row[0], '#') === 0) {
+                continue;
+            }
+
+            // If header has not been set, assign and skip to next iteration
+            if (!$header) {
+                $header = $row;
+                continue;
+            }
+
+            // Map the data to columns
+            $data = array_combine($header, $row);
+
+            // Insert data into the database
+            AlarmHistory::create([
+                'EventTime' => $data['EventTime'],
+                'Message' => $data['Message'],
+                'StateChangeType' => $data['StateChangeType'],
+                'AlarmClass' => $data['AlarmClass'],
+                'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null, // Replace empty with NULL
+                'AlarmGroup' => $data['AlarmGroup'],
+                'Name' => $data['Name'],
+                'AlarmState' => $data['AlarmState'],
+                'Condition' => $data['Condition'],
+                'CurrentValue' => $data['CurrentValue'],
+                'InhibitState' => $data['InhibitState'],
+                'LimitValueExceeded' => $data['LimitValueExceeded'],
+                'Priority' => $data['Priority'],
+                'Severity' => $data['Severity'],
+                'Tag1Value' => $data['Tag1Value'],
+                'Tag2Value' => $data['Tag2Value'],
+                'Tag3Value' => $data['Tag3Value'],
+                'Tag4Value' => $data['Tag4Value'],
+                'EventCategory' => $data['EventCategory'],
+                'Quality' => $data['Quality'],
+                'Expression' => $data['Expression'],
+            ]);
+        }
+
+        fclose($handle);
+
+        return view('dashboard');
+    }
 }

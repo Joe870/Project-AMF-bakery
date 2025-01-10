@@ -11,32 +11,33 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('AlarmHistory', function (Blueprint $table) {
+        Schema::create('alarm_histories', function (Blueprint $table) {
             $table->id();
-            $table->timestamp('event_time')->nullable();
-            $table->string('message')->nullable();
-            $table->string('state_change_type')->nullable();
-            $table->string('alarm_class')->nullable();
-            $table->integer('alarm_count')->nullable();
-            $table->string('alarm_group')->nullable();
-            $table->string('name')->nullable();
-            $table->string('alarm_state')->nullable();
-            $table->string('condition')->nullable();
-            $table->integer('current_value')->nullable();
-            $table->string('inhibit_state')->nullable();
-            $table->string('limit_value_exceeded')->nullable();
-            $table->string('priority')->nullable();
-            $table->string('severity')->nullable();
-            $table->string('tag1_value')->nullable();
-            $table->string('tag2_value')->nullable();
-            $table->string('tag3_value')->nullable();
-            $table->string('tag4_value')->nullable();
-            $table->string('event_category')->nullable();
-            $table->string('quality')->nullable();
-            $table->string('expression')->nullable();
-            $table->timestamps();
+            $table->timestamp('EventTime')->nullable();
+            $table->text('Message')->nullable();
+            $table->string('StateChangeType')->nullable();
+            $table->string('AlarmClass')->nullable();
+            $table->integer('AlarmCount')->nullable();
+            $table->string('AlarmGroup')->nullable();
+            $table->string('Name')->nullable();
+            $table->string('AlarmState')->nullable();
+            $table->string('Condition')->nullable();
+            $table->string('CurrentValue')->nullable();
+            $table->string('InhibitState')->nullable();
+            $table->string('LimitValueExceeded')->nullable();
+            $table->string('Priority')->nullable();
+            $table->string('Severity')->nullable();
+            $table->string('Tag1Value')->nullable();
+            $table->string('Tag2Value')->nullable();
+            $table->string('Tag3Value')->nullable();
+            $table->string('Tag4Value')->nullable();
+            $table->string('EventCategory')->nullable();
+            $table->string('Quality')->nullable();
+            $table->text('Expression')->nullable();
+            $table->timestamps(); // Adds `created_at` and `updated_at`
         });
     }
+
 
     /**
      * Reverse the migrations.

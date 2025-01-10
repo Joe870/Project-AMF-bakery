@@ -20,5 +20,7 @@ Route::get('/csv', [alarmHistoryController::class, 'show']);
 Route::get('/hello', [Welcome::class, "hello"]);
 Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile']);
 Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
-Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert"); 
+Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
 Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
+
+Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
