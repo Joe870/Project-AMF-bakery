@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class alarmHistoryController extends Controller
 {
-    public function show()
+    public function show() // fine to later remove this function. Currently keeping it for testing purposes. Will be using the dashboard and importCsvFromFile function in the future.
     {
         $filePath = storage_path('app/public/AlarmHistory.csv');
 
@@ -17,79 +17,66 @@ class alarmHistoryController extends Controller
         }
 
         $handle = fopen($filePath, 'r');
-        $header = fgetcsv($handle); // Read the header row
+        $data = [];
+        $errorCount = 0;
+        $errorFrequencies = [];
+        $duplicateMessages = [];
+        $chunkSize = 1000;
+        $otherData = 6;
+        $chunkSize += $otherData;
+        $messages = [];
 
-        if (!$header) {
-            fclose($handle);
-            abort(400, 'CSV file is empty or invalid.');
+        // Read header row
+        $header = fgetcsv($handle);
+        if ($header) {
+            $data[] = $header;
         }
 
-        Log::info("CSV Header:", $header); // Log the header row
-
-        // Map header columns to your database columns
-        $columns = [
-            'EventTime' => 'event_time',
-            'Message' => 'message',
-            'StateChangeType' => 'state_change_type',
-            'AlarmClass' => 'alarm_class',
-            'AlarmCount' => 'alarm_count',
-            'AlarmGroup' => 'alarm_group',
-            'Name' => 'name',
-            'AlarmState' => 'alarm_state',
-            'Condition' => 'condition',
-            'CurrentValue' => 'current_value',
-            'InhibitState' => 'inhibit_state',
-            'LimitValueExceeded' => 'limit_value_exceeded',
-            'Priority' => 'priority',
-            'Severity' => 'severity',
-            'Tag1Value' => 'tag1_value',
-            'Tag2Value' => 'tag2_value',
-            'Tag3Value' => 'tag3_value',
-            'Tag4Value' => 'tag4_value',
-            'EventCategory' => 'event_category',
-            'Quality' => 'quality',
-            'Expression' => 'expression',
-        ];
-
-        // Process CSV rows
-        $data = [];
+        // Loop through CSV rows
         while (($row = fgetcsv($handle)) !== false) {
-            $rowData = [];
-            foreach ($header as $index => $column) {
-                $dbColumn = $columns[$column] ?? null;
-                if ($dbColumn) {
-                    $rowData[$dbColumn] = $row[$index] ?? null;
-                }
-            }
+            $data[] = $row;
 
-            if (!empty($rowData)) {
-                Log::info("Row data:", $rowData); // Log each row's data
-                $data[] = $rowData;
+            $messageColumnIndex = 1;
+
+            if (isset($row[$messageColumnIndex]) && !empty($row[$messageColumnIndex])) {
+                $message = trim($row[$messageColumnIndex]);
+
+                // Count total occurrences of each message
+                $messages[] = $message;
+                $errorCount++;
+
+                // Count the frequency of each message
+                if (isset($errorFrequencies[$message])) {
+                    $errorFrequencies[$message]++;
+                } else {
+                    $errorFrequencies[$message] = 1;
+                }
+                if (count($data) >= $chunkSize) {
+                    break;
+                }
             }
         }
 
         fclose($handle);
 
-        // Log the data that will be inserted
-        Log::info("Data to be inserted:", $data);
-
-        // Insert data into the database
-        if (count($data) > 0) {
-            AlarmHistory::insert($data);
-            Log::info("Data inserted successfully!");
-        } else {
-            Log::warning("No data to insert.");
+        // check for duplicate messages (messages that appear more than once)
+        foreach ($errorFrequencies as $message => $count) {
+            if ($count > 1) {
+                $duplicateMessages[] = [
+                    'message' => $message,
+                    'count' => $count
+                ];
+            }
         }
 
-        return response()->json(['message' => 'CSV data saved to the database successfully!'], 200);
+        return view('csv.show', compact('data', 'errorCount', 'errorFrequencies', 'duplicateMessages'));
     }
 
     public function importCsvFromFile()
     {
-        $filePath = storage_path('app/public/uploads/WIzIWRF9CFcvWmOukqiEWowrymz8JtsMrB3vrA5l.csv');
+        $filePath = storage_path('app/public/AlarmHistory.csv');
 
         if (!file_exists($filePath)) {
-//            dd($filePath);
             return response()->json(['error' => 'File not found.'], 404);
         }
 
@@ -139,6 +126,7 @@ class alarmHistoryController extends Controller
 
         fclose($handle);
 
-        return view('dashboard');
+        return response()->json(['message' => 'CSV imported successfully']);
     }
+
 }
