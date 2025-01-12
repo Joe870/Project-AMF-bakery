@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AlarmHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class alarmHistoryController extends Controller
 {
@@ -72,61 +73,152 @@ class alarmHistoryController extends Controller
         return view('csv.show', compact('data', 'errorCount', 'errorFrequencies', 'duplicateMessages'));
     }
 
-    public function importCsvFromFile()
+    public function uploadValidateCsv(Request $request)
     {
-        $filePath = storage_path('app/public/AlarmHistory.csv');
+        // Required headers
+        $requiredHeaders = [
+            'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount',
+            'AlarmGroup', 'Name', 'AlarmState', 'Condition', 'CurrentValue', 'InhibitState',
+            'LimitValueExceeded', 'Priority', 'Severity', 'Tag1Value', 'Tag2Value',
+            'Tag3Value', 'Tag4Value', 'EventCategory', 'Quality', 'Expression'
+        ];
 
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => 'File not found.'], 404);
-        }
+        // Validate file input
+        $validated = $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt',
+        ]);
 
-        $handle = fopen($filePath, 'r');
+        try {
+            // Load file
+            $file = $request->file('csv_file');
+            $filePath = $file->getRealPath();
+$handle = fopen($filePath, 'r');
 
-        $header = null;
-        while (($row = fgetcsv($handle)) !== false) {
-            // Skip lines starting with #
-            if (strpos($row[0], '#') === 0) {
-                continue;
-            }
-
-            // If header has not been set, assign and skip to next iteration
-            if (!$header) {
-                $header = $row;
-                continue;
-            }
-
-            // Map the data to columns
-            $data = array_combine($header, $row);
-
-            // Insert data into the database
-            AlarmHistory::create([
-                'EventTime' => $data['EventTime'],
-                'Message' => $data['Message'],
-                'StateChangeType' => $data['StateChangeType'],
-                'AlarmClass' => $data['AlarmClass'],
-                'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null, // Replace empty with NULL
-                'AlarmGroup' => $data['AlarmGroup'],
-                'Name' => $data['Name'],
-                'AlarmState' => $data['AlarmState'],
-                'Condition' => $data['Condition'],
-                'CurrentValue' => $data['CurrentValue'],
-                'InhibitState' => $data['InhibitState'],
-                'LimitValueExceeded' => $data['LimitValueExceeded'],
-                'Priority' => $data['Priority'],
-                'Severity' => $data['Severity'],
-                'Tag1Value' => $data['Tag1Value'],
-                'Tag2Value' => $data['Tag2Value'],
-                'Tag3Value' => $data['Tag3Value'],
-                'Tag4Value' => $data['Tag4Value'],
-                'EventCategory' => $data['EventCategory'],
-                'Quality' => $data['Quality'],
-                'Expression' => $data['Expression'],
-            ]);
-        }
-
-        fclose($handle);
-
-        return response()->json(['message' => 'CSV imported successfully']);
+// Skip lines starting with #
+while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+    if (strpos($row[0], '#') === 0) {
+        continue;
     }
+    $headers = $row;
+    break;
+}
+
+            if (!$headers || array_diff($requiredHeaders, $headers)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The uploaded file does not have the required CSV headers.',
+                    'expected_headers' => $requiredHeaders,
+                    'actual_headers' => $headers,
+                ], 400); // Bad request
+            }
+
+            $insertedRows = 0;
+
+            // Process and insert rows
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                $data = array_combine($headers, $row);
+
+                if (array_diff_key(array_flip($requiredHeaders), $data)) {
+                    continue; // Skip invalid rows
+                }
+
+                AlarmHistory::create([
+                    'EventTime' => $data['EventTime'],
+                    'Message' => $data['Message'],
+                    'StateChangeType' => $data['StateChangeType'],
+                    'AlarmClass' => $data['AlarmClass'],
+                    'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null,
+                    'AlarmGroup' => $data['AlarmGroup'],
+                    'Name' => $data['Name'],
+                    'AlarmState' => $data['AlarmState'],
+                    'Condition' => $data['Condition'],
+                    'CurrentValue' => $data['CurrentValue'],
+                    'InhibitState' => $data['InhibitState'],
+                    'LimitValueExceeded' => $data['LimitValueExceeded'],
+                    'Priority' => $data['Priority'],
+                    'Severity' => $data['Severity'],
+                    'Tag1Value' => $data['Tag1Value'],
+                    'Tag2Value' => $data['Tag2Value'],
+                    'Tag3Value' => $data['Tag3Value'],
+                    'Tag4Value' => $data['Tag4Value'],
+                    'EventCategory' => $data['EventCategory'],
+                    'Quality' => $data['Quality'],
+                    'Expression' => $data['Expression'],
+                ]);
+                $insertedRows++;
+            }
+
+            fclose($handle);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'CSV file has been processed and imported successfully.',
+                'inserted_rows' => $insertedRows,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing the CSV file.',
+                'error' => $e->getMessage(),
+            ], 500); // Server error
+        }
+    }
+
+//    public function importCsvFromFile()
+//    {
+//        $filePath = storage_path('app/public/AlarmHistory.csv');
+//
+//        if (!file_exists($filePath)) {
+//            return response()->json(['error' => 'File not found.'], 404);
+//        }
+//
+//        $handle = fopen($filePath, 'r');
+//
+//        $header = null;
+//        while (($row = fgetcsv($handle)) !== false) {
+//            // Skip lines starting with #
+//            if (strpos($row[0], '#') === 0) {
+//                continue;
+//            }
+//
+//            // If header has not been set, assign and skip to next iteration
+//            if (!$header) {
+//                $header = $row;
+//                continue;
+//            }
+//
+//            // Map the data to columns
+//            $data = array_combine($header, $row);
+//
+//            // Insert data into the database
+//            AlarmHistory::create([
+//                'EventTime' => $data['EventTime'],
+//                'Message' => $data['Message'],
+//                'StateChangeType' => $data['StateChangeType'],
+//                'AlarmClass' => $data['AlarmClass'],
+//                'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null, // Replace empty with NULL
+//                'AlarmGroup' => $data['AlarmGroup'],
+//                'Name' => $data['Name'],
+//                'AlarmState' => $data['AlarmState'],
+//                'Condition' => $data['Condition'],
+//                'CurrentValue' => $data['CurrentValue'],
+//                'InhibitState' => $data['InhibitState'],
+//                'LimitValueExceeded' => $data['LimitValueExceeded'],
+//                'Priority' => $data['Priority'],
+//                'Severity' => $data['Severity'],
+//                'Tag1Value' => $data['Tag1Value'],
+//                'Tag2Value' => $data['Tag2Value'],
+//                'Tag3Value' => $data['Tag3Value'],
+//                'Tag4Value' => $data['Tag4Value'],
+//                'EventCategory' => $data['EventCategory'],
+//                'Quality' => $data['Quality'],
+//                'Expression' => $data['Expression'],
+//            ]);
+//        }
+//
+//        fclose($handle);
+//
+//        return response()->json(['message' => 'CSV imported successfully']);
+//    }
 
 }

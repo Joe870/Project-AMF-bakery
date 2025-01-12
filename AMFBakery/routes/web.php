@@ -15,10 +15,10 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 
-require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);
-
+Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
 //Route::post('/alarm-history/import', [AlarmHistoryController::class, 'importCsv'])->name('alarm-history.import');
 Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
 

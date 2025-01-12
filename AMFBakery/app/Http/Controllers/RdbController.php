@@ -17,41 +17,38 @@ class RdbController extends Controller
             $request->validate([
                 'rdb_file' => 'required|file|',
             ]);
-    
+
             // Store the uploaded file
             $path = $request->file('rdb_file')->store('uploads', 'public');
-    
+
             // Get the full path of the file
             $fullPath = storage_path('app/public/uploads' . $path);
-    
+
             // Define output directory for CSV files
             $outputDir = storage_path('app/public/csv_outputs');
             if (!file_exists($outputDir)) {
                 mkdir($outputDir, 0755, true);
             }
-    
+
             // Run the Python script
             $process = new Process(['python3', base_path('convert_rdb.py'), $fullPath, $outputDir]);
             $process->run();
-    
+
             // Check for errors
             if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
-    
+
             // Return the list of generated CSV files
             $csvFiles = array_diff(scandir($outputDir), ['.', '..']);
             return view('csv_file', ['files' => $csvFiles, 'outputDir' => $outputDir]);
-            if (!$process->isSuccessful()) {
-                dd($process->getErrorOutput());
-            }
         }
     }
 
 
     public function uploadFile(Request $request)
     {
-       
+
     $request->validate([
         'rdb_file' => 'required|file',
     ]);
