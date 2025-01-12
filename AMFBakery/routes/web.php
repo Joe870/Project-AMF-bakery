@@ -14,7 +14,6 @@ Route::view('profile', 'profile')
     ->middleware(['auth', 'verified'])
     ->name('profile');
 
-
 require __DIR__.'/auth.php';Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);

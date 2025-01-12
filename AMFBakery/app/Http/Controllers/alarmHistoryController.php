@@ -92,24 +92,29 @@ class alarmHistoryController extends Controller
             // Load file
             $file = $request->file('csv_file');
             $filePath = $file->getRealPath();
-$handle = fopen($filePath, 'r');
+            $handle = fopen($filePath, 'r');
 
-// Skip lines starting with #
-while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-    if (strpos($row[0], '#') === 0) {
-        continue;
-    }
-    $headers = $row;
-    break;
-}
+            // Skip lines starting with #
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                if (strpos($row[0], '#') === 0) {
+                    continue;
+                }
+                $headers = $row;
+                break;
+            }
 
             if (!$headers || array_diff($requiredHeaders, $headers)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The uploaded file does not have the required CSV headers.',
-                    'expected_headers' => $requiredHeaders,
-                    'actual_headers' => $headers,
-                ], 400); // Bad request
+                // Pass arrays into the session instead of `withErrors`
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with([
+                        'expected_headers' => $requiredHeaders, // Pass expected headers
+                        'actual_headers' => $headers ?? [],    // Pass actual headers
+                    ])
+                    ->withErrors([
+                        'csv_file' => 'The uploaded file does not have the required headers. Please verify the file.',
+                    ]);
             }
 
             $insertedRows = 0;
@@ -150,17 +155,11 @@ while (($row = fgetcsv($handle, 1000, ',')) !== false) {
 
             fclose($handle);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'CSV file has been processed and imported successfully.',
-                'inserted_rows' => $insertedRows,
-            ]);
+            return redirect('/dashboard');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while processing the CSV file.',
-                'error' => $e->getMessage(),
-            ], 500); // Server error
+            return redirect()->back()->withInput()->withErrors([
+                'csv_file' => 'An error occurred while processing the CSV file: ' . $e->getMessage(),
+            ]);
         }
     }
 
