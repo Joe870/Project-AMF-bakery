@@ -15,14 +15,8 @@
 
 <livewire:dashboard-component />
     @livewireScripts
-    @livewireStyles
     @livewireChartsScripts
     @livewireChartsScripts
-
-
-
-
-
 
 </body>
 </html>
