@@ -7,9 +7,9 @@
 <body>
     <form action="{{ route('upload.file') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        <label for="rdb_file">Choose RDB File:</label>
-        <input type="file" name="rdb_file" required>
-        @error('rdb_file')
+        <label for="uploadedFile">Choose RDB File:</label>
+        <input type="file" name="uploadedFile" required>
+        @error('uploadedFile')
             {{$message}}
         @enderror
         <button type="submit">Upload</button>

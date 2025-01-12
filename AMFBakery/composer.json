@@ -9,6 +9,7 @@
         "asantibanez/livewire-charts": "^4.1",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
+        "league/csv": "^9.21",
         "livewire/livewire": "^3.4",
         "livewire/volt": "^1.0"
     },
