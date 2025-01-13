@@ -6,10 +6,7 @@
             <img src="{{ asset('images/logo.webp') }}" alt="Logo">
         </div>
         <li><a href="{{ route('dashboard') }}">Dashboard</li>
-
-        <li><a href="{{ route('login') }}">Login</a></li>
-        <li><a href="{{ route('register') }}">Register</a></li>
-
+        <li><a href="{{route('profile') }}">profile</li>
     </ul>
 </nav>
 

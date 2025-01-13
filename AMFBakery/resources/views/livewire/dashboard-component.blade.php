@@ -38,6 +38,7 @@ body {
     color: #333;
     cursor: pointer;
     border-radius: 30px;
+    z-index:10; 
 }
 
 .filter-section {
