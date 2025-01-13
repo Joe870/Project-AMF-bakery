@@ -14,11 +14,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth', 'verified'])
     ->name('profile');
 
-require __DIR__.'/auth.php';Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
+require __DIR__.'/auth.php';
+
+Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
 
 Route::get('/csv', [alarmHistoryController::class, 'show']);
-Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
-//Route::post('/alarm-history/import', [AlarmHistoryController::class, 'importCsv'])->name('alarm-history.import');
 Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
 
 Route::get('/hello', [Welcome::class, "hello"]);

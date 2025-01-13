@@ -75,6 +75,10 @@ class alarmHistoryController extends Controller
 
     public function uploadValidateCsv(Request $request)
     {
+
+        //file validation, uploading the wrong file gives the wrong error message.
+
+        //
         // Required headers
         $requiredHeaders = [
             'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount',
@@ -117,8 +121,6 @@ class alarmHistoryController extends Controller
                     ]);
             }
 
-            $insertedRows = 0;
-
             // Process and insert rows
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 $data = array_combine($headers, $row);
@@ -150,7 +152,7 @@ class alarmHistoryController extends Controller
                     'Quality' => $data['Quality'],
                     'Expression' => $data['Expression'],
                 ]);
-                $insertedRows++;
+
             }
 
             fclose($handle);
