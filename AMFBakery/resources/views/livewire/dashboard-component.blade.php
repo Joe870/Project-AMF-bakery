@@ -14,13 +14,16 @@ body {
     flex-direction: column;
     align-items: center;
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color:white;
 }
 
 .container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 300px);  /* Increased row height */
+    grid-template-areas: "box1 box1 pie"
+                         "box2 box2 pie"
+                         "error error error";
+    grid-template-rows: 300px 300px 300px;
+    grid-template-columns: 400px 400px 400px;
     gap: 20px;
     width: 100%;
     max-width: 1200px;
@@ -28,7 +31,7 @@ body {
 }
 
 
-.box, .box-large, .pie-box {
+.box1, .box2, .box-large, .pie-box {
     background-color: #e0e0e0;
     border: 4px solid #ff6666;
     display: flex;
@@ -38,6 +41,7 @@ body {
     color: #333;
     cursor: pointer;
     border-radius: 30px;
+    z-index:10; 
 }
 
 .filter-section {
@@ -60,45 +64,28 @@ body {
 }
 
 
-.box-large:hover{
+.box-large:hover, .box1:hover, .box2:hover, .pie-box:hover{
     background-color: #D6D4D4;
     border: 4px solid #000000;
     border-radius: 30px;
 }
 
-.box:hover{
-    background-color: #D6D4D4;
-    border: 4px solid #000000;
-    border-radius: 30px;
+.box1{
+    grid-area:box1;
 }
 
-#box{
-    grid-column: span 1;
-
+.box2{
+    grid-area:box2;
 }
 
 .pie-box{
-    grid-column: span 1;
-    grid-row: span 2;
-}
-
-.pie-box:hover{
-    background-color: #D6D4D4;
-    border: 4px solid #000000;
-    border-radius: 30px;
-}
-
-#pie-box{
-    grid-column: span 1;
+    grid-area:pie;
 }
 
 .box-large {
-    grid-column: span 1;
-    grid-row: span 2;
-    display: flex;
     flex-direction: column;
     padding: 20px;
-
+    grid-area:error;
 }
 
 .box-large h2 {
@@ -143,7 +130,7 @@ body {
 
 
 
-        <div class="box" wire:click="redirectToChart('column')">
+        <div class="box1" wire:click="redirectToChart('column')">
             <livewire:livewire-column-chart
             :column-chart-model="$columnChartModel"
             key="{{ $columnChartModel->reactiveKey() }}" />
@@ -170,7 +157,7 @@ body {
         </div>
 
 
-        <div class="box" wire:click="redirectToChart('line')">
+        <div class="box2" wire:click="redirectToChart('line')">
             <livewire:livewire-line-chart
                 :line-chart-model="$lineChartModel"
                 key="{{ $lineChartModel->reactiveKey() }}" />

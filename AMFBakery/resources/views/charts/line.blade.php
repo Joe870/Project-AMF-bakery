@@ -7,8 +7,6 @@
     @livewireStyles
     @include('includes/navbar')
     <link rel="stylesheet" href="{{ asset('css/charts.css') }}">
-
-
 </head>
 
 <body>
