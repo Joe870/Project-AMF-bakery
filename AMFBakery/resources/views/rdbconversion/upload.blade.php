@@ -66,15 +66,12 @@
     @csrf
     <label for="csv_file">Upload CSV File:</label>
     <input type="file" name="csv_file" accept=".csv" required>
-
-    {{-- Display error message --}}
     @if ($errors->has('csv_file'))
         <div class="error-message">
             {{ $errors->first('csv_file') }}
         </div>
     @endif
 
-    {{-- Show expected and actual headers if available in the session --}}
     @if (session('expected_headers') && session('actual_headers'))
         <div>
             <p><strong>Expected Headers:</strong></p>

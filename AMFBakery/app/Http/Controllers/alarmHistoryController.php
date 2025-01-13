@@ -73,13 +73,11 @@ class alarmHistoryController extends Controller
         return view('csv.show', compact('data', 'errorCount', 'errorFrequencies', 'duplicateMessages'));
     }
 
+    // Function to directly upload data to the database. First validates headers, then uploads file to the DB.
+    //Has a bug that I have yet to fix: File validation, uploading the wrong file sometimes gives the wrong error message
     public function uploadValidateCsv(Request $request)
     {
 
-        //file validation, uploading the wrong file gives the wrong error message.
-
-        //
-        // Required headers
         $requiredHeaders = [
             'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount',
             'AlarmGroup', 'Name', 'AlarmState', 'Condition', 'CurrentValue', 'InhibitState',
@@ -87,18 +85,16 @@ class alarmHistoryController extends Controller
             'Tag3Value', 'Tag4Value', 'EventCategory', 'Quality', 'Expression'
         ];
 
-        // Validate file input
         $validated = $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt',
         ]);
 
+        // Try catch to catch any problems occurring while uploading the file.
         try {
-            // Load file
             $file = $request->file('csv_file');
             $filePath = $file->getRealPath();
             $handle = fopen($filePath, 'r');
-
-            // Skip lines starting with #
+            //Skip all lines that start with #, then start the headers where row ended.
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 if (strpos($row[0], '#') === 0) {
                     continue;
@@ -106,27 +102,24 @@ class alarmHistoryController extends Controller
                 $headers = $row;
                 break;
             }
-
+            //Check if headers of given file are 1:1 with the expected headers.
             if (!$headers || array_diff($requiredHeaders, $headers)) {
-                // Pass arrays into the session instead of `withErrors`
                 return redirect()
                     ->back()
                     ->withInput()
                     ->with([
-                        'expected_headers' => $requiredHeaders, // Pass expected headers
-                        'actual_headers' => $headers ?? [],    // Pass actual headers
+                        'expected_headers' => $requiredHeaders,
+                        'actual_headers' => $headers ?? [],
                     ])
                     ->withErrors([
                         'csv_file' => 'The uploaded file does not have the required headers. Please verify the file.',
                     ]);
             }
-
-            // Process and insert rows
+            //Use the second argument in the parameter to change the amount of files you want to upload to the DB.
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 $data = array_combine($headers, $row);
-
                 if (array_diff_key(array_flip($requiredHeaders), $data)) {
-                    continue; // Skip invalid rows
+                    continue;
                 }
 
                 AlarmHistory::create([
@@ -164,62 +157,5 @@ class alarmHistoryController extends Controller
             ]);
         }
     }
-
-//    public function importCsvFromFile()
-//    {
-//        $filePath = storage_path('app/public/AlarmHistory.csv');
-//
-//        if (!file_exists($filePath)) {
-//            return response()->json(['error' => 'File not found.'], 404);
-//        }
-//
-//        $handle = fopen($filePath, 'r');
-//
-//        $header = null;
-//        while (($row = fgetcsv($handle)) !== false) {
-//            // Skip lines starting with #
-//            if (strpos($row[0], '#') === 0) {
-//                continue;
-//            }
-//
-//            // If header has not been set, assign and skip to next iteration
-//            if (!$header) {
-//                $header = $row;
-//                continue;
-//            }
-//
-//            // Map the data to columns
-//            $data = array_combine($header, $row);
-//
-//            // Insert data into the database
-//            AlarmHistory::create([
-//                'EventTime' => $data['EventTime'],
-//                'Message' => $data['Message'],
-//                'StateChangeType' => $data['StateChangeType'],
-//                'AlarmClass' => $data['AlarmClass'],
-//                'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null, // Replace empty with NULL
-//                'AlarmGroup' => $data['AlarmGroup'],
-//                'Name' => $data['Name'],
-//                'AlarmState' => $data['AlarmState'],
-//                'Condition' => $data['Condition'],
-//                'CurrentValue' => $data['CurrentValue'],
-//                'InhibitState' => $data['InhibitState'],
-//                'LimitValueExceeded' => $data['LimitValueExceeded'],
-//                'Priority' => $data['Priority'],
-//                'Severity' => $data['Severity'],
-//                'Tag1Value' => $data['Tag1Value'],
-//                'Tag2Value' => $data['Tag2Value'],
-//                'Tag3Value' => $data['Tag3Value'],
-//                'Tag4Value' => $data['Tag4Value'],
-//                'EventCategory' => $data['EventCategory'],
-//                'Quality' => $data['Quality'],
-//                'Expression' => $data['Expression'],
-//            ]);
-//        }
-//
-//        fclose($handle);
-//
-//        return response()->json(['message' => 'CSV imported successfully']);
-//    }
 
 }
