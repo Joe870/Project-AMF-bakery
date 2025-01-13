@@ -6,25 +6,27 @@ use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
 use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
-use App\Livewire\DashboardComponent;
 use App\Models\AlarmHistory;
 
 class DashboardComponent extends Component
 {
-
     public $searchTerm = '';
     public $errorMessage = '';
+    public $errors = []; // Store filtered errors for rendering
 
     public function search()
     {
         $this->errorMessage = '';
+        $this->errors = [];
+
         if (empty($this->searchTerm)) {
             $this->errorMessage = 'Please enter a search term.';
-            return;
         }
 
         $this->getFilteredErrors();
     }
+
+
 
     private function getFilteredErrors()
     {
@@ -70,13 +72,18 @@ class DashboardComponent extends Component
 
         return $chart;
     }
-    
-    
+
+public function doesSearchTermExist($searchTerm)
+{
+    // Check if the search term exists in the database
+    return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
+}
+
     public function getLineChartModel()
     {
         $searchTerm = strtolower(trim($this->searchTerm));
-    
-        if ($searchTerm != '') {
+
+        if ($searchTerm != '' && $this->doesSearchTermExist($searchTerm)) {
             $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
                 ->select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
@@ -86,40 +93,40 @@ class DashboardComponent extends Component
             $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
-                ->take(10) 
+                ->take(10)
                 ->get();
         }
-    
+
         $chart = new LineChartModel();
-    
-        $counter = 1; 
+
+        $counter = 1;
         foreach ($data as $item) {
             $shortLabel = strlen($item->Message) > 15 ? substr($item->Message, 0, 12) . '...' : $item->Message;
-    
+
             $chart->addPoint($shortLabel, (int) $item->count, [
-                'tooltip' => $item->Message . ': ' . $item->count . ' times', 
+                'tooltip' => $item->Message . ': ' . $item->count . ' times',
             ]);
-            
+
             $counter++;
         }
-    
+
         return $chart;
     }
-    
-    
-    
-    
+
+
+
+
     public function getPieChartModel()
     {
         $searchTerm = strtolower(trim($this->searchTerm));
-    
-        if ($searchTerm != '') {
+
+        if ($searchTerm != '' && $this->doesSearchTermExist($searchTerm)) {
             $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
                 ->select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
                 ->get();
-    
+
             $otherCount = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
                 ->whereNotIn('Message', $data->pluck('Message'))
                 ->select(\DB::raw('COUNT(*) as count'))
@@ -130,23 +137,23 @@ class DashboardComponent extends Component
                 ->orderByDesc('count')
                 ->take(3)
                 ->get();
-    
+
             $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
                 ->select(\DB::raw('COUNT(*) as count'))
                 ->value('count');
         }
-    
+
         $chart = new PieChartModel();
         $chart->setTitle('Top 3 Errors with Others');
-    
+
         foreach ($data as $item) {
             $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
-    
+
         if ($otherCount > 0) {
-            $chart->addSlice('Other', $otherCount, '#cccccc'); 
+            $chart->addSlice('Other', $otherCount, '#cccccc');
         }
-    
+
         return $chart;
     }
 
@@ -155,7 +162,7 @@ class DashboardComponent extends Component
         $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
             ->groupBy('Message')
             ->orderByDesc('count')
-            ->take(3)  
+            ->take(3)
             ->pluck('Message')
             ->toArray();
 
