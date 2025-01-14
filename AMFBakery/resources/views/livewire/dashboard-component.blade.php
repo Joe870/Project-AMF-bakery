@@ -41,7 +41,7 @@ body {
     color: #333;
     cursor: pointer;
     border-radius: 30px;
-    z-index:10; 
+    z-index:10;
 }
 
 .filter-section {
@@ -140,7 +140,7 @@ body {
 
 
         <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
-            <h2>Alle Errors</h2>
+            <h2>Latest errors</h2>
             <ul>
                 @foreach ($top3errors as $error)
                     <li>{{ $error }}</li>
