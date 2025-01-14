@@ -1,12 +1,12 @@
 <nav>
     <ul>
         <div class="logo-container">
-            <a href="https://amfbakery.com/" target="_blank">
+            <a href="https://amfbakery.com/" target="_blank"></a>
 
             <img src="{{ asset('images/logo.webp') }}" alt="Logo">
         </div>
-        <li><a href="{{ route('dashboard') }}">Dashboard</li>
-        <li><a href="{{route('profile') }}">profile</li>
+        <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+        <li><a href="{{route('profile') }}">profile</a></li>
     </ul>
 </nav>
 
@@ -16,21 +16,21 @@
         color: black;
         padding: 10px 0;
         width: 100%;
-        display: flex; 
+        display: flex;
         align-items: center;
     }
 
     .logo-container img {
-        height: 50px; 
+        height: 50px;
     }
 
     nav ul {
         list-style-type: none;
         margin: 0;
         padding: 0;
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
     }
 
@@ -41,7 +41,7 @@
     nav ul li a {
         color: #ed2027;
         text-decoration: none;
-        font-size: 16px; 
+        font-size: 16px;
     }
 
     nav ul li a:hover {
