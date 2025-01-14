@@ -4,26 +4,29 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\LineChartModel;
+use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 use App\Models\AlarmHistory;
 
 class DashboardComponent extends Component
 {
-
     public $searchTerm = '';
     public $errorMessage = '';
+    public $errors = []; // Store filtered errors for rendering
 
     public function search()
     {
         $this->errorMessage = '';
+        $this->errors = [];
+
         if (empty($this->searchTerm)) {
             $this->errorMessage = 'Please enter a search term.';
-            return;
         }
 
         $this->getFilteredErrors();
     }
+
+
 
     private function getFilteredErrors()
     {
@@ -97,6 +100,12 @@ class DashboardComponent extends Component
 
         return $chart;
     }
+
+public function doesSearchTermExist($searchTerm)
+{
+    // Check if the search term exists in the database
+    return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
+}
 
     public function getLineChartModel()
     {
@@ -212,15 +221,4 @@ class DashboardComponent extends Component
             return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
+}
