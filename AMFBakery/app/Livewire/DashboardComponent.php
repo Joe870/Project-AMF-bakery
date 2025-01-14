@@ -75,9 +75,14 @@ class DashboardComponent extends Component
         // Haal data op en groepeer op Message
         $data = $query->groupBy('Message')
                     ->orderByDesc('count')
+                    ->take(8)
                     ->get();
 
-        $chart = new ColumnChartModel();
+        $chart = (new ColumnChartModel())
+            ->setHorizontal()
+            ->setDataLabelsEnabled(true); // Added here to disable labels
+
+
 
         // Stel de titel in afhankelijk van de filters
         if ($isUrgent && $filter) {
@@ -172,6 +177,7 @@ class DashboardComponent extends Component
         // Haal data op en groepeer op Message
         $data = $query->groupBy('Message')
                     ->orderByDesc('count')
+                    ->take(8)
                     ->get();
 
         $chart = new PieChartModel();
@@ -201,7 +207,7 @@ class DashboardComponent extends Component
             $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
                 ->groupBy('Message')
                 ->orderByDesc('count')
-                ->take(3)
+                ->take(10)
                 ->pluck('Message')
                 ->toArray();
 
