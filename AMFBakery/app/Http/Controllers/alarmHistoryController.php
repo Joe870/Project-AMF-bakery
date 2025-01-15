@@ -75,8 +75,11 @@ class alarmHistoryController extends Controller
 
     // Function to directly upload data to the database. First validates headers, then uploads file to the DB.
     //Has a bug that I have yet to fix: File validation, uploading the wrong file sometimes gives the wrong error message
-    public function uploadValidateCsv(Request $request)
-    {
+    // Okay suuuuper weird bug, I have a specific jpg img that somehow tells the code that it's a csv file
+    // kinda confused...
+public function uploadValidateCsv(Request $request)
+{
+    $chunkSize = 500; // Process the file in chunks of 500 rows at a time
 
         $requiredHeaders = [
             'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount',
@@ -94,6 +97,7 @@ class alarmHistoryController extends Controller
             $file = $request->file('csv_file');
             $filePath = $file->getRealPath();
             $handle = fopen($filePath, 'r');
+            $rowChunk = []; // Store rows in chunks
             //Skip all lines that start with #, then start the headers where row ended.
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 if (strpos($row[0], '#') === 0) {
@@ -102,7 +106,7 @@ class alarmHistoryController extends Controller
                 $headers = $row;
                 break;
             }
-            //Check if headers of given file are 1:1 with the expected headers.
+            // Check if headers of given file are 1:1 with the expected headers.
             if (!$headers || array_diff($requiredHeaders, $headers)) {
                 return redirect()
                     ->back()
@@ -115,14 +119,13 @@ class alarmHistoryController extends Controller
                         'csv_file' => 'The uploaded file does not have the required headers. Please verify the file.',
                     ]);
             }
-            //Use the second argument in the parameter to change the amount of files you want to upload to the DB.
+            // Use the second argument in the parameter to change the amount of files you want to upload to the DB.
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 $data = array_combine($headers, $row);
                 if (array_diff_key(array_flip($requiredHeaders), $data)) {
                     continue;
                 }
-
-                AlarmHistory::create([
+                $rowChunk[] = [
                     'EventTime' => $data['EventTime'],
                     'Message' => $data['Message'],
                     'StateChangeType' => $data['StateChangeType'],
@@ -144,10 +147,20 @@ class alarmHistoryController extends Controller
                     'EventCategory' => $data['EventCategory'],
                     'Quality' => $data['Quality'],
                     'Expression' => $data['Expression'],
-                ]);
+                ];
+                if (count($rowChunk) >= $chunkSize) {
+                    AlarmHistory::insert($rowChunk);
+                    $rowChunk = [];
+                }
+
+                // Removed individual AlarmHistory::create() calls
+                // Bulk insert logic added within $rowChunk management
 
             }
 
+            if (!empty($rowChunk)) {
+                AlarmHistory::insert($rowChunk);
+            }
             fclose($handle);
 
             return redirect('/dashboard');

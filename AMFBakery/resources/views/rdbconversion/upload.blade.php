@@ -60,15 +60,42 @@
             font-size: 12px;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const fileInput = form.querySelector('input[type="file"]');
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message';
+            fileInput.insertAdjacentElement('afterend', errorMessage);
+
+            fileInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                const maxSize = 2 * 1024 * 1024; // 2 MB
+
+                if (file && file.size > maxSize) {
+                    errorMessage.textContent = 'File is too large. Maximum size is 2 MB.';
+                    fileInput.value = ''; // Reset file input
+                } else {
+                    errorMessage.textContent = ''; // Clear error message
+                }
+            });
+        });
+    </script>
 </head>
 <body>
-<form action="{{ route('validate.upload.csv') }}" method="POST" enctype="multipart/form-data">
+<form id="csv-upload-form" action="{{ route('validate.upload.csv') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <label for="csv_file">Upload CSV File:</label>
     <input type="file" name="csv_file" accept=".csv" required>
     @if ($errors->has('csv_file'))
         <div class="error-message">
             {{ $errors->first('csv_file') }}
+        </div>
+    @endif
+
+    @if (session('error_message'))
+        <div class="error-message">
+            {{ session('error_message') }}
         </div>
     @endif
 
@@ -92,5 +119,6 @@
 
     <button type="submit">Upload</button>
 </form>
+    <p id="fallback-error" class="error-message" style="display: none;">File upload failed due to size limit.</p>
 </body>
 </html>
