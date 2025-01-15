@@ -257,7 +257,7 @@
 
 
                 <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
-                    <h2>Alle Errors</h2>
+                    <h2>Most frequent errors</h2>
                     <ul>
                         @foreach ($top3errors as $error)
                             <li>{{ $error }}</li>

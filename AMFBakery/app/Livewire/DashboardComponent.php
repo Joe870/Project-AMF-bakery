@@ -99,7 +99,7 @@ class DashboardComponent extends Component
             } elseif ($filter) {
                 $chart->setTitle('Errors with Filter');
             } else {
-                $chart->setTitle('All Errors');
+                $chart->setTitle('Error frequency');
             }
 
             //Voeg data toe aan de chart
@@ -215,7 +215,7 @@ class DashboardComponent extends Component
         } elseif ($filter) {
             $chart->setTitle('Errors with Filter');
         } else {
-            $chart->setTitle('All Errors');
+            $chart->setTitle('Error frequency');
         }
 
         // Voeg data toe aan de chart
