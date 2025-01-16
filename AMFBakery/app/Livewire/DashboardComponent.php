@@ -18,21 +18,17 @@ class DashboardComponent extends Component
     public $endDate = '';
 
 
-    // regelt alle fouten over zoeken
+    // regelt alle fouten na klikken op de zoek button
     public function search()
     {
         $this->errorMessage = '';
         $this->errors = [];
 
-        $query = AlarmHistory::query();
-
-        // als zoekterm en datums bijde niet zijn ingevoert krijg je deze error
         if (empty($this->searchTerm) && (empty($this->startDate) || empty($this->endDate))) {
             $this->errorMessage = 'Please provide a search term or a date range.';
             return;
         }
 
-        // als de eerst ingevulde datum later is dan de tweede ingevulde datum
         if (!empty($this->startDate) && !empty($this->endDate)) {
             if (Carbon::parse($this->startDate)->gt(Carbon::parse($this->endDate))) {
                 $this->errorMessage = 'Invalid date range. Start date must be earlier than or equal to the end date.';
@@ -40,13 +36,25 @@ class DashboardComponent extends Component
             }
         }
 
-        // als er in de database niks is gevonden
-        if (empty($query->select('Message', \DB::raw('COUNT(*) as count')))) {
+        $query = AlarmHistory::query();
+
+        $this->errors = $query->select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->pluck('Message')
+            ->toArray();
+
+        if (empty($this->errors)) {
             $this->errorMessage = 'No results found for the given criteria.';
             return;
         }
-    }
 
+        if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $this->searchTerm . '%'])->exists() && empty($this->startDate) ) {
+            $this->errorMessage = 'No results found for the given searchterm.';
+            return;
+
+        }
+    }
 
     // stuurt je naar de bijbehorende webpagina
     public function redirectToChart($chartType)
@@ -59,6 +67,7 @@ class DashboardComponent extends Component
             return redirect()->route('charts.pie');
         }
     }
+
 
     // checkt of de zoekterm bestaat in de database en returnt een boolean
     public function doesSearchTermExist($searchTerm)
@@ -80,7 +89,7 @@ class DashboardComponent extends Component
     public function applyFilters($query)
     {
         // checkt of de 2 tijden bestaan
-        if ($this->doesDateRangeExist($this->startDate, $this->endDate)) {
+        if (!empty($this->startDate) && !empty($this->endDate) && $this->doesDateRangeExist($this->startDate, $this->endDate)) {
             // lte = less than or equal, het checkt of de eerste datum minder is dan de wteede
             if (Carbon::parse($this->startDate)->lte(Carbon::parse($this->endDate))) {
                 // wherebteween past de query aan zodat het alleen data tussen start en eind heeft
@@ -88,14 +97,18 @@ class DashboardComponent extends Component
                     Carbon::parse($this->startDate)->startOfDay(),
                     Carbon::parse($this->endDate)->endOfDay(),
                 ]);
+            } else {
+                $this->errorMessage = 'Invalid date range. Start date must be earlier than or equal to the end date.';
             }
         }
 
-
-            $searchTerm = (trim($this->searchTerm));
-            $query->whereRaw('Message LIKE ?', ['%' . $searchTerm . '%']);
-
+        // zoekfilter toepassen
+        if (!empty($this->searchTerm) && $this->doesSearchTermExist($this->searchTerm)) {
+            $searchTerm = strtolower(trim($this->searchTerm));
+            $query->whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%']);
+        }
     }
+
 
 
 
@@ -128,7 +141,6 @@ class DashboardComponent extends Component
 
         return $chart;
     }
-
 
     public function getLineChartModel()
     {
@@ -165,6 +177,7 @@ class DashboardComponent extends Component
 
         return $chart;
     }
+
 
 
     public function getPieChartModel()
