@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 use App\Models\AlarmHistory;
 
@@ -25,7 +25,6 @@ class DashboardComponent extends Component
     }
 
 
-
     private function getFilteredErrors()
     {
         $errors = AlarmHistory::where('Message', 'LIKE', '%' . $this->searchTerm . '%')
@@ -40,7 +39,6 @@ class DashboardComponent extends Component
         }
         $this->errors = $errors;
     }
-
 
 
     public function redirectToChart($chartType)
@@ -62,59 +60,52 @@ class DashboardComponent extends Component
 
     public function getColumnChartModel()
     {
-            // Pak filter en urgent-status indien aangegeven
-            $filter = request()->query('filter');
-            $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
+        // Pak filter en urgent-status indien aangegeven
+        $filter = request()->query('filter');
+        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
 
-            // Begin met de query
-            $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
+        // Begin met de query
+        $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
 
-            // Voeg urgent-filter toe als urgent is aangevinkt
-            if ($isUrgent) {
-                $query->where('priority', 'Urgent');
-            }
+        // Voeg urgent-filter toe als urgent is aangevinkt
+        if ($isUrgent) {
+            $query->where('priority', 'Urgent');
+        }
 
-            // Voeg filter toe als er een filter is
-            if ($filter) {
-                $query->where('Message', 'LIKE', "%{$filter}%");
-            }
+        // Voeg filter toe als er een filter is
+        if ($filter) {
+            $query->where('Message', 'LIKE', "%{$filter}%");
+        }
 
-            // Haal data op en groepeer op Message
-            $data = $query->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(8)
-                ->get();
+        // Haal data op en groepeer op Message
+        $data = $query->groupBy('Message')
+            ->orderByDesc('count')
+            ->take(8)
+            ->get();
 
-            $chart = (new ColumnChartModel())
-                ->setHorizontal()
-                ->setDataLabelsEnabled(true); // Added here to disable labels
+        $chart = (new ColumnChartModel())
+            ->setHorizontal()
+            ->setDataLabelsEnabled(true); // Added here to disable labels
 
 
+        // Stel de titel in afhankelijk van de filters
+        if ($isUrgent && $filter) {
+            $chart->setTitle('Urgent Errors with Filter');
+        } elseif ($isUrgent) {
+            $chart->setTitle('Urgent Errors');
+        } elseif ($filter) {
+            $chart->setTitle('Errors with Filter');
+        } else {
+            $chart->setTitle('Error frequency');
+        }
 
-            // Stel de titel in afhankelijk van de filters
-            if ($isUrgent && $filter) {
-                $chart->setTitle('Urgent Errors with Filter');
-            } elseif ($isUrgent) {
-                $chart->setTitle('Urgent Errors');
-            } elseif ($filter) {
-                $chart->setTitle('Errors with Filter');
-            } else {
-                $chart->setTitle('Error frequency');
-            }
+        //Voeg data toe aan de chart
+        foreach ($data as $item) {
+            $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+        }
 
-            //Voeg data toe aan de chart
-            foreach ($data as $item) {
-                $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
-            }
-
-            return $chart;
+        return $chart;
     }
-
-public function doesSearchTermExist($searchTerm)
-{
-    // Check if the search term exists in the database
-    return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
-}
 
     public function getLineChartModel()
     {
@@ -140,8 +131,8 @@ public function doesSearchTermExist($searchTerm)
 
         // Haal data op en groepeer op event_date
         $data = $query->groupBy('event_date')
-                    ->orderBy('event_date')
-                    ->get();
+            ->orderBy('event_date')
+            ->get();
 
         $chart = new LineChartModel();
 
@@ -163,9 +154,6 @@ public function doesSearchTermExist($searchTerm)
 
         return $chart;
     }
-
-
-
 
 
     public function getPieChartModel()
@@ -207,9 +195,9 @@ public function doesSearchTermExist($searchTerm)
 
         // Haal data op en groepeer op Message
         $data = $query->groupBy('Message')
-                    ->orderByDesc('count')
-                    ->take(8)
-                    ->get();
+            ->orderByDesc('count')
+            ->take(8)
+            ->get();
 
         $chart = new PieChartModel();
 
@@ -233,14 +221,14 @@ public function doesSearchTermExist($searchTerm)
     }
 
 
-        public function render()
-        {
-            $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(10)
-                ->pluck('Message')
-                ->toArray();
+    public function render()
+    {
+        $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->take(10)
+            ->pluck('Message')
+            ->toArray();
 
         $columnChartModel = $this->getColumnChartModel();
         $lineChartModel = $this->getLineChartModel();
@@ -248,3 +236,4 @@ public function doesSearchTermExist($searchTerm)
 
         return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
     }
+}
