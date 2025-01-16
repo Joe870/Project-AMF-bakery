@@ -36,6 +36,7 @@
 
     nav ul li {
         margin: 0 15px;
+
     }
 
     nav ul li a {
