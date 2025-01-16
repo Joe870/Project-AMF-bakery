@@ -1,12 +1,12 @@
 <nav>
     <ul>
         <div class="logo-container">
-            <a href="https://amfbakery.com/" target="_blank">
+            <a href="https://amfbakery.com/" target="_blank"></a>
 
             <img src="{{ asset('images/logo.webp') }}" alt="Logo">
         </div>
-        <li><a href="{{ route('dashboard') }}">Dashboard</li>
-        <li><a href="{{route('profile') }}">profile</li>
+        <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
+        <li><a href="{{route('profile') }}">profile</a></li>
     </ul>
 </nav>
 
@@ -42,7 +42,6 @@
     nav ul li a {
         color: #ed2027;
         text-decoration: none;
-
         font-size: 16px;
     }
 

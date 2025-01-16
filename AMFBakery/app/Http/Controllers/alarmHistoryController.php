@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AlarmHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class alarmHistoryController extends Controller
 {
@@ -72,61 +73,102 @@ class alarmHistoryController extends Controller
         return view('csv.show', compact('data', 'errorCount', 'errorFrequencies', 'duplicateMessages'));
     }
 
-    public function importCsvFromFile()
-    {
-        $filePath = storage_path('app/public/AlarmHistory.csv');
+    // Function to directly upload data to the database. First validates headers, then uploads file to the DB.
+    //Has a bug that I have yet to fix: File validation, uploading the wrong file sometimes gives the wrong error message
+    // Okay suuuuper weird bug, I have a specific jpg img that somehow tells the code that it's a csv file
+    // kinda confused...
+public function uploadValidateCsv(Request $request)
+{
+    $chunkSize = 500; // Process the file in chunks of 500 rows at a time
 
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => 'File not found.'], 404);
-        }
+        $requiredHeaders = [
+            'EventTime', 'Message', 'StateChangeType', 'AlarmClass', 'AlarmCount',
+            'AlarmGroup', 'Name', 'AlarmState', 'Condition', 'CurrentValue', 'InhibitState',
+            'LimitValueExceeded', 'Priority', 'Severity', 'Tag1Value', 'Tag2Value',
+            'Tag3Value', 'Tag4Value', 'EventCategory', 'Quality', 'Expression'
+        ];
 
-        $handle = fopen($filePath, 'r');
+        $validated = $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt',
+        ]);
 
-        $header = null;
-        while (($row = fgetcsv($handle)) !== false) {
-            // Skip lines starting with #
-            if (strpos($row[0], '#') === 0) {
-                continue;
+        // Try catch to catch any problems occurring while uploading the file.
+        try {
+            $file = $request->file('csv_file');
+            $filePath = $file->getRealPath();
+            $handle = fopen($filePath, 'r');
+            $rowChunk = []; // Store rows in chunks
+            //Skip all lines that start with #, then start the headers where row ended.
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                if (strpos($row[0], '#') === 0) {
+                    continue;
+                }
+                $headers = $row;
+                break;
+            }
+            // Check if headers of given file are 1:1 with the expected headers.
+            if (!$headers || array_diff($requiredHeaders, $headers)) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with([
+                        'expected_headers' => $requiredHeaders,
+                        'actual_headers' => $headers ?? [],
+                    ])
+                    ->withErrors([
+                        'csv_file' => 'The uploaded file does not have the required headers. Please verify the file.',
+                    ]);
+            }
+            // Use the second argument in the parameter to change the amount of files you want to upload to the DB.
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                $data = array_combine($headers, $row);
+                if (array_diff_key(array_flip($requiredHeaders), $data)) {
+                    continue;
+                }
+                $rowChunk[] = [
+                    'EventTime' => $data['EventTime'],
+                    'Message' => $data['Message'],
+                    'StateChangeType' => $data['StateChangeType'],
+                    'AlarmClass' => $data['AlarmClass'],
+                    'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null,
+                    'AlarmGroup' => $data['AlarmGroup'],
+                    'Name' => $data['Name'],
+                    'AlarmState' => $data['AlarmState'],
+                    'Condition' => $data['Condition'],
+                    'CurrentValue' => $data['CurrentValue'],
+                    'InhibitState' => $data['InhibitState'],
+                    'LimitValueExceeded' => $data['LimitValueExceeded'],
+                    'Priority' => $data['Priority'],
+                    'Severity' => $data['Severity'],
+                    'Tag1Value' => $data['Tag1Value'],
+                    'Tag2Value' => $data['Tag2Value'],
+                    'Tag3Value' => $data['Tag3Value'],
+                    'Tag4Value' => $data['Tag4Value'],
+                    'EventCategory' => $data['EventCategory'],
+                    'Quality' => $data['Quality'],
+                    'Expression' => $data['Expression'],
+                ];
+                if (count($rowChunk) >= $chunkSize) {
+                    AlarmHistory::insert($rowChunk);
+                    $rowChunk = [];
+                }
+
+                // Removed individual AlarmHistory::create() calls
+                // Bulk insert logic added within $rowChunk management
+
             }
 
-            // If header has not been set, assign and skip to next iteration
-            if (!$header) {
-                $header = $row;
-                continue;
+            if (!empty($rowChunk)) {
+                AlarmHistory::insert($rowChunk);
             }
+            fclose($handle);
 
-            // Map the data to columns
-            $data = array_combine($header, $row);
-
-            // Insert data into the database
-            AlarmHistory::create([
-                'EventTime' => $data['EventTime'],
-                'Message' => $data['Message'],
-                'StateChangeType' => $data['StateChangeType'],
-                'AlarmClass' => $data['AlarmClass'],
-                'AlarmCount' => is_numeric($data['AlarmCount']) ? $data['AlarmCount'] : null, // Replace empty with NULL
-                'AlarmGroup' => $data['AlarmGroup'],
-                'Name' => $data['Name'],
-                'AlarmState' => $data['AlarmState'],
-                'Condition' => $data['Condition'],
-                'CurrentValue' => $data['CurrentValue'],
-                'InhibitState' => $data['InhibitState'],
-                'LimitValueExceeded' => $data['LimitValueExceeded'],
-                'Priority' => $data['Priority'],
-                'Severity' => $data['Severity'],
-                'Tag1Value' => $data['Tag1Value'],
-                'Tag2Value' => $data['Tag2Value'],
-                'Tag3Value' => $data['Tag3Value'],
-                'Tag4Value' => $data['Tag4Value'],
-                'EventCategory' => $data['EventCategory'],
-                'Quality' => $data['Quality'],
-                'Expression' => $data['Expression'],
+            return redirect('/dashboard');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withErrors([
+                'csv_file' => 'An error occurred while processing the CSV file: ' . $e->getMessage(),
             ]);
         }
-
-        fclose($handle);
-
-        return response()->json(['message' => 'CSV imported successfully']);
     }
 
 }
