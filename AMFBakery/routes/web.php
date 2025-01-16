@@ -4,6 +4,8 @@ use App\Http\Controllers\alarmHistoryController;
 use App\Http\Controllers\Welcome;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\DashboardComponent;
+use App\Livewire\LineChart;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -23,7 +25,9 @@ Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'i
 
 Route::get('/hello', [Welcome::class, "hello"]);
 Route::get('/rdbconversion/upload', [RdbController::class, 'upload']);
-Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert"); 
+Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
+
+
 
 
 Route::get('/dashboard/column-chart', function () {
@@ -41,5 +45,11 @@ Route::get('/dashboard/line-chart', function () {
 
 Route::get('/dashboard/pie-chart', function () {
     $pieChartModel = (new DashboardComponent())->getPieChartModel();
-    return view('charts.pie', compact('pieChartModel')); 
+    return view('charts.pie', compact('pieChartModel'));
 })->name('charts.pie');
+
+
+
+Route::view('/chart' ,'chart')->name('chart-view');
+
+Route::view('/dashboard/columnchart', 'column')->name('dashboard.columnchart');

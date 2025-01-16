@@ -7,7 +7,6 @@
         }
 
         body {
-            max-width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,14 +15,13 @@
         }
 
         .container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 260px);
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+    grid-template-rows: repeat(2, 260px); /* Two rows, each 260px */
+    gap: 20px;
+    width: 100%;
+    margin: 0 auto;
+}
 
         .box, .box-large, .pie-box {
             background-color: #e0e0e0;
@@ -152,24 +150,27 @@
     margin-right: auto;
 
     }
+    .livewire-column-chart {
+    max-width: 100%;
+    max-height: 100%;
+}
+
 
     </style>
 
     <!-- zoeken -->
     <div class="search-bar">
-        <input type="text" wire:model="searchTerm" placeholder="Search for an error..." />
-        <button wire:click="search">Search</button>
-    </div>
+            <input type="text" wire:model="searchTerm" placeholder="Search errors...">
 
+                <input type="date" wire:model="startDate" placeholder="Start Date">
+                <input type="date" wire:model="endDate" placeholder="End Date">
 
-    <!-- error message -->
-    @if ($errorMessage)
-    <div class="error-message">
-        {{ $errorMessage }}
+                <button wire:click="search">Search</button>
         </div>
+
+    @if ($errorMessage)
+        <p class="error-message">{{ $errorMessage }}</p>
     @endif
-
-
 
     <div class="container">
         <div class="box" wire:click="redirectToChart('column')">
@@ -179,7 +180,7 @@
         </div>
 
         <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
-            <h2>Alle Errors</h2>
+            <h2>All Errors</h2>
             <ul>
                 @foreach ($top3errors as $error)
                     <li>{{ $error }}</li>
@@ -199,4 +200,7 @@
                 key="{{ $lineChartModel->reactiveKey() }}" />
         </div>
     </div>
+
 </div>
+
+

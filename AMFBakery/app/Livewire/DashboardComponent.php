@@ -7,44 +7,48 @@ use Asantibanez\LivewireCharts\Models\ColumnChartModel;
 use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 use App\Models\AlarmHistory;
+use Carbon\Carbon;
 
 class DashboardComponent extends Component
 {
     public $searchTerm = '';
     public $errorMessage = '';
-    public $errors = []; // Store filtered errors for rendering
+    public $errors = [];
+    public $startDate = '';
+    public $endDate = '';
 
+
+    // regelt alle fouten over zoeken
     public function search()
     {
         $this->errorMessage = '';
         $this->errors = [];
 
-        if (empty($this->searchTerm)) {
-            $this->errorMessage = 'Please enter a search term.';
+        $query = AlarmHistory::query();
+
+        // als zoekterm en datums bijde niet zijn ingevoert krijg je deze error
+        if (empty($this->searchTerm) && (empty($this->startDate) || empty($this->endDate))) {
+            $this->errorMessage = 'Please provide a search term or a date range.';
+            return;
         }
 
-        $this->getFilteredErrors();
+        // als de eerst ingevulde datum later is dan de tweede ingevulde datum
+        if (!empty($this->startDate) && !empty($this->endDate)) {
+            if (Carbon::parse($this->startDate)->gt(Carbon::parse($this->endDate))) {
+                $this->errorMessage = 'Invalid date range. Start date must be earlier than or equal to the end date.';
+                return;
+            }
+        }
+
+        // als er in de database niks is gevonden
+        if (empty($query->select('Message', \DB::raw('COUNT(*) as count')))) {
+            $this->errorMessage = 'No results found for the given criteria.';
+            return;
+        }
     }
 
 
-
-    private function getFilteredErrors()
-    {
-        $errors = AlarmHistory::where('Message', 'LIKE', '%' . $this->searchTerm . '%')
-            ->select('Message', \DB::raw('COUNT(*) as count'))
-            ->groupBy('Message')
-            ->orderByDesc('count')
-            ->pluck('Message')
-            ->toArray();
-
-        if (empty($errors)) {
-            $this->errorMessage = 'No results found for "' . $this->searchTerm . '". Please try another term.';
-        }
-
-        $this->errors = $errors;
-    }
-
-
+    // stuurt je naar de bijbehorende webpagina
     public function redirectToChart($chartType)
     {
         if ($chartType == 'column') {
@@ -56,106 +60,149 @@ class DashboardComponent extends Component
         }
     }
 
+    // checkt of de zoekterm bestaat in de database en returnt een boolean
+    public function doesSearchTermExist($searchTerm)
+    {
+        return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
+    }
+
+    //checkt of er data is tussen de 2 gegeven tijden
+    public function doesDaterangeExist($startDate, $endDate){
+        return AlarmHistory::whereBetween('EventTime', [
+            Carbon::parse($startDate)->startOfDay(),
+            Carbon::parse($endDate)->endOfDay(),
+        ])->exists();
+
+    }
+
+
+    // past de filters toe op de query
+    public function applyFilters($query)
+    {
+        // checkt of de 2 tijden bestaan
+        if ($this->doesDateRangeExist($this->startDate, $this->endDate)) {
+            // lte = less than or equal, het checkt of de eerste datum minder is dan de wteede
+            if (Carbon::parse($this->startDate)->lte(Carbon::parse($this->endDate))) {
+                // wherebteween past de query aan zodat het alleen data tussen start en eind heeft
+                $query->whereBetween('EventTime', [
+                    Carbon::parse($this->startDate)->startOfDay(),
+                    Carbon::parse($this->endDate)->endOfDay(),
+                ]);
+            }
+        }
+
+
+            $searchTerm = (trim($this->searchTerm));
+            $query->whereRaw('Message LIKE ?', ['%' . $searchTerm . '%']);
+
+    }
+
+
+
     public function getColumnChartModel()
     {
-        $data = AlarmHistory::select(\DB::raw('DATE(EventTime) as event_date'), \DB::raw('COUNT(*) as alarm_count'))
-            ->groupBy('event_date')
-            ->orderBy('event_date')
-            ->get();
-
         $chart = new ColumnChartModel();
         $chart->setTitle('Alarms Over Time');
 
+        $query = AlarmHistory::query();
+
+        $this->applyFilters($query);
+
+        $data = $query->select(
+            \DB::raw('DATE(EventTime) as event_date'),
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('event_date')
+        ->orderBy('event_date')
+        ->get();
+
         foreach ($data as $item) {
-            $chart->addColumn((string) $item->event_date, (int) $item->alarm_count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+            $chart->addColumn(
+                (string) $item->event_date,
+                (int) $item->alarm_count,
+                '#' . substr(md5($item->event_date), 0, 6),
+                ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+            );
         }
 
         return $chart;
     }
 
-public function doesSearchTermExist($searchTerm)
-{
-    // Check if the search term exists in the database
-    return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
-}
 
     public function getLineChartModel()
     {
-        $searchTerm = strtolower(trim($this->searchTerm));
-
-        if ($searchTerm != '' && $this->doesSearchTermExist($searchTerm)) {
-            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
-        } else {
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(10)
-                ->get();
-        }
-
         $chart = new LineChartModel();
 
-        $counter = 1;
+        $query = AlarmHistory::query();
+        $this->applyFilters($query);
+
+        $data = $query->select(
+            'Message',
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('Message')
+        ->orderBy(\DB::raw('COUNT(*)'), 'desc')
+        ->get();
+
+
+        if (!empty($this->startDate) && !empty($this->endDate)) {
+
+            $chart->setTitle('Alarms between ' . $this->startDate . 'and ' . $this->endDate);
+        }else{
+            $chart->setTitle('Alarms over time');
+        }
+
         foreach ($data as $item) {
-            $shortLabel = strlen($item->Message) > 15 ? substr($item->Message, 0, 12) . '...' : $item->Message;
+            $shortLabel = strlen($item->messages) > 15 ? substr($item->messages, 0, 12) . '...' : $item->messages;
 
-            $chart->addPoint($shortLabel, (int) $item->count, [
-                'tooltip' => $item->Message . ': ' . $item->count . ' times',
-            ]);
-
-            $counter++;
+            $chart->addPoint($shortLabel,
+            (int) $item->alarm_count,
+            ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+        );
         }
 
         return $chart;
     }
-
-
 
 
     public function getPieChartModel()
     {
-        $searchTerm = strtolower(trim($this->searchTerm));
+        $chart = new PieChartModel();
+        $query = AlarmHistory::query();
+        $this->applyFilters($query);
 
-        if ($searchTerm != '' && $this->doesSearchTermExist($searchTerm)) {
-            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
 
-            $otherCount = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
-        } else {
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(3)
-                ->get();
+        $data = $query->select(
+            'Message',
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('Message')
+        ->orderByDesc(\DB::raw('COUNT(*)'))
+        ->get();
+
+        if (empty($this->searchTerm) && !$this->doesSearchTermExist($this->searchTerm) && !$this->doesDateRangeExist($this->startDate, $this->endDate)) {
 
             $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
+            ->select(\DB::raw('COUNT(*) as count'))
+            ->value('count');
+
+
+            if ($otherCount > 0) {
+                $chart->addSlice('Other', $otherCount, '#cccccc');
+            }
+
         }
-
-        $chart = new PieChartModel();
-        $chart->setTitle('Top 3 Errors with Others');
-
         foreach ($data as $item) {
-            $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+            $chart->addSlice($item->Message, $item->alarm_count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
 
-        if ($otherCount > 0) {
-            $chart->addSlice('Other', $otherCount, '#cccccc');
-        }
 
         return $chart;
     }
+
 
     public function render()
     {
