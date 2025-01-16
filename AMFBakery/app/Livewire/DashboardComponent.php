@@ -114,6 +114,7 @@ class DashboardComponent extends Component
 
     public function getColumnChartModel()
     {
+
         $chart = new ColumnChartModel();
         $chart->setTitle('Alarms Over Time');
 
