@@ -153,28 +153,29 @@ class DashboardComponent extends Component
         $this->applyFilters($query);
 
         // data ophalen uit de database
+
         $data = $query->select(
             'Message',
             \DB::raw('COUNT(*) as alarm_count'),
-            \DB::raw('DATE(EventTime) as date'),
-
             \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
         )
         ->groupBy('Message')
         ->orderBy(\DB::raw('COUNT(*)'), 'desc')
         ->get();
 
+
         if (!empty($this->startDate) && !empty($this->endDate)) {
+
             $chart->setTitle('Alarms between ' . $this->startDate . 'and ' . $this->endDate);
         }else{
             $chart->setTitle('Alarms over time');
         }
 
         foreach ($data as $item) {
-            $shortLabel = strlen($item->date) > 15 ? substr($item->date, 0, 12) . '...' : $item->date;
+            $shortLabel = strlen($item->messages) > 15 ? substr($item->messages, 0, 12) . '...' : $item->messages;
 
             $chart->addPoint($shortLabel,
-            (int) $item->date,
+            (int) $item->alarm_count,
             ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
         );
         }
