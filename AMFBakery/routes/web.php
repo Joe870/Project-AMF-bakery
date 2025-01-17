@@ -26,6 +26,9 @@ Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile']);
 Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
 Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
 
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy.policy');
 
 Route::get('/dashboard/column-chart', function () {
     $columnChartModel = (new DashboardComponent())->getColumnChartModel();

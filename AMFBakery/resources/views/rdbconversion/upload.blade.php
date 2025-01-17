@@ -119,8 +119,8 @@
 
     <button type="submit">Upload</button>
     <label>
-        <input type="checkbox" name="consent" required>
-        I consent to the processing of my data
+        <input type="checkbox" name="consent" id="consent" required>
+        I consent to the processing of my data (<a href="{{ route('privacy.policy') }}" target="_blank">Privacy Policy</a>)
     </label>
 
     @if ($errors->has('consent'))

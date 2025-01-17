@@ -90,6 +90,7 @@ public function uploadValidateCsv(Request $request)
 
         $validated = $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt',
+            'consent' => 'required|accepted',
         ]);
 
         // Try catch to catch any problems occurring while uploading the file.
