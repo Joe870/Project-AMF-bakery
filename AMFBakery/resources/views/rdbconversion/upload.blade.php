@@ -118,6 +118,16 @@
     @endif
 
     <button type="submit">Upload</button>
+    <label>
+        <input type="checkbox" name="consent" required>
+        I consent to the processing of my data
+    </label>
+
+    @if ($errors->has('consent'))
+        <div class="error-message">
+            {{ $errors->first('consent') }}
+        </div>
+    @endif
 </form>
     <p id="fallback-error" class="error-message" style="display: none;">File upload failed due to size limit.</p>
 </body>
