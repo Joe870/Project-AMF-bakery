@@ -46,4 +46,9 @@ class DashboardGrafieken extends Component
         // $lineChartModel->setSmoothCurve();
         return view('livewire.dashboard-component', compact('columnChartModel', 'lineChartModel', 'pieChartModel'));
     }
+
+
+
+
+
 }

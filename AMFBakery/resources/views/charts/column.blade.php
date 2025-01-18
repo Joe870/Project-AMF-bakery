@@ -13,6 +13,14 @@
     <div class="search-bar">
         <form action="/dashboard/column-chart" method="GET">
 
+            <div class="priority-dropdown">
+                <label for="priority">Priority:</label>
+                <select name="priority" id="priority">
+                    <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
+                    <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgent</option>
+                </select>
+            </div>
+
             <input type="text" name="searchTerm" placeholder="Search errors...">
 
                 <input type="date" name="startDate" placeholder="Start Date">

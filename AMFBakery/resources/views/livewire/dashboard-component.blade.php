@@ -15,13 +15,13 @@
         }
 
         .container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Three equal columns */
-    grid-template-rows: repeat(2, 260px); /* Two rows, each 260px */
-    gap: 20px;
-    width: 100%;
-    margin: 0 auto;
-}
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+            grid-template-rows: repeat(2, 260px); /* Two rows, each 260px */
+            gap: 20px;
+            width: 100%;
+            margin: 0 auto;
+        }
 
         .box, .box-large, .pie-box {
             background-color: #e0e0e0;
@@ -38,8 +38,7 @@
         .search-bar {
             margin-top: 20px;
             display: flex;
-            flex-direction: row;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             gap: 15px;
             margin-bottom: 20px;
@@ -135,38 +134,89 @@
             border-radius: 20px;
             border: 3px solid #000000;
         }
+
         .error-message {
             color: red;
-    margin-top: 10px;
-    padding: 10px;
-    max-width: 50%;
-    font-size: 16px;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
+            margin-top: 10px;
+            padding: 10px;
+            max-width: 50%;
+            font-size: 16px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    }
-    .livewire-column-chart {
-    max-width: 100%;
-    max-height: 100%;
-}
+        .livewire-column-chart {
+            max-width: 100%;
+            max-height: 100%;
+        }
 
+        .priority-dropdown {
+            position: relative;
+        }
 
+        .priority-dropdown button {
+            padding: 10px;
+            background-color: #ed2027;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+        }
+
+        .priority-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .priority-dropdown-content label {
+            display: block;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .priority-dropdown-content label:hover {
+            background-color: #ddd;
+        }
+
+        .priority-dropdown.open .priority-dropdown-content {
+            display: block;
+        }
     </style>
+
 
     <!-- zoeken -->
     <div class="search-bar">
         <form action="/dashboard" method="GET">
+            <div class="priority-dropdown">
+                <label for="priority">Priority:</label>
+                <select name="priority" id="priority">
+                    <option value="" {{ request('priority') === null ? 'selected' : '' }}>Choose a priority</option>
+
+                    <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
+                    <option value="urgent" {{ request('priority') === 'urgent' ? 'selected' : '' }}>Urgent</option>
+                </select>
+            </div>
 
             <input type="text" name="searchTerm" placeholder="Search errors...">
+            <input type="date" name="endDate" placeholder="End Date">
 
                 <input type="date" name="startDate" placeholder="Start Date">
                 <input type="date" name="endDate" placeholder="End Date">
                 <input type="hidden" name="searchTriggered" id="searchTriggered" value="false">
+
                 <input type="hidden" name="errorMessage" id="errorMessage" value="false">
 
                 <button type="submit" onclick="document.getElementById('searchTriggered').value='true'">Search</button>
