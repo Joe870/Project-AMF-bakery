@@ -12,6 +12,27 @@
 </head>
 
 <body>
+
+    <div class="search-bar">
+        <form action="/dashboard/line-chart" method="GET">
+
+            <input type="text" name="searchTerm" placeholder="Search errors...">
+
+                <input type="date" name="startDate" placeholder="Start Date">
+                <input type="date" name="endDate" placeholder="End Date">
+                <input type="hidden" name="searchTriggered" id="searchTriggered" value="false">
+
+                <button type="submit" onclick="document.getElementById('searchTriggered').value='true'">Search</button>
+
+
+            </form>
+        </div>
+        @if(session()->has('errorMessage'))
+        <div class="error-message">
+            {{ session('errorMessage') }}
+        </div>
+        @endif
+
 <div class="chart-container">
 
     <livewire:livewire-line-chart
@@ -21,9 +42,6 @@
     @livewireScripts
     @livewireChartsScripts
 </div>
-<form action="/dashboard/line-chart" method="GET">
-    <input type="text" name="filter" placeholder="Enter filter" required><br>
-    <button type="submit">Submit</button>
-</form>
+
 </body>
 </html>

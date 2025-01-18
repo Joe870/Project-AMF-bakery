@@ -85,32 +85,72 @@ class DashboardComponent extends Component
     }
 
 
-    // past de filters toe op de query
-    public function applyFilters($query)
+
+    public function applyFilters($query, $searchTriggered = false)
     {
-        // checkt of de 2 tijden bestaan
-        if (!empty($this->startDate) && !empty($this->endDate) && $this->doesDateRangeExist($this->startDate, $this->endDate)) {
-            // lte = less than or equal, het checkt of de eerste datum minder is dan de wteede
-            if (Carbon::parse($this->startDate)->lte(Carbon::parse($this->endDate))) {
-                // wherebteween past de query aan zodat het alleen data tussen start en eind heeft
-                $query->whereBetween('EventTime', [
-                    Carbon::parse($this->startDate)->startOfDay(),
-                    Carbon::parse($this->endDate)->endOfDay(),
-                ]);
-            } else {
-                $this->errorMessage = 'Invalid date range. Start date must be earlier than or equal to the end date.';
+        session()->forget('errorMessage'); // Clear any previous session error message
+
+        $startDate = request()->query('startDate');
+        $endDate = request()->query('endDate');
+        $searchTerm = request()->query('searchTerm');
+        $this->errorMessage = '';
+        $errorMessage = request()->query('errorMessage');
+        $this->errors = [];
+
+        $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
+
+        //if u click on search without inputting a term or date range
+        if ($searchTriggered && empty($searchTerm) && (empty($startDate) || empty($endDate)))  {
+            session()->put('errorMessage', 'Please provide a search term or a date range.');
+        }
+
+
+        if ($searchTriggered && !empty($startDate) && !empty($endDate)) {
+            if (Carbon::parse($startDate)->gt(Carbon::parse($endDate))) {
+                session()->put('errorMessage','Invalid date range. Start date must be earlier than or equal to the end date.');
             }
         }
 
-        // zoekfilter toepassen
-        if (!empty($this->searchTerm) && $this->doesSearchTermExist($this->searchTerm)) {
-            $searchTerm = strtolower(trim($this->searchTerm));
+
+
+        $testingquery = AlarmHistory::query();
+
+        $errors = $testingquery->select('Message', \DB::raw('COUNT(*) as count'))
+            ->groupBy('Message')
+            ->orderByDesc('count')
+            ->pluck('Message')
+            ->toArray();
+
+        if ($searchTriggered && empty($errors)) {
+            session()->put('errorMessage','No results found for the given criteria.');
+        }
+
+
+        if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists() && empty($startDate) ) {
+            session()->put('errorMessage','No results found for the given searchterm.');
+
+
+        }
+
+
+        // Apply date range filter
+        if (!empty($startDate) && !empty($endDate) && $this->doesDateRangeExist($startDate, $endDate)) {
+            if (Carbon::parse($startDate)->lte(Carbon::parse($endDate))) {
+                $query->whereBetween('EventTime', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay(),
+                ]);
+            }
+        }
+
+        // Apply search term filter
+        if (!empty($searchTerm) && $this->doesSearchTermExist($searchTerm)) {
+            $searchTerm = strtolower(trim($searchTerm));
             $query->whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%']);
         }
+
+
     }
-
-
-
 
     public function getColumnChartModel()
     {
@@ -119,8 +159,8 @@ class DashboardComponent extends Component
         $chart->setTitle('Alarms Over Time');
 
         $query = AlarmHistory::query();
-
-        $this->applyFilters($query);
+        $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
+        $this->applyFilters($query, $searchTriggered);
 
         $data = $query->select(
             \DB::raw('DATE(EventTime) as event_date'),
@@ -234,7 +274,8 @@ class DashboardComponent extends Component
         $columnChartModel = $this->getColumnChartModel();
         $lineChartModel = $this->getLineChartModel();
         $pieChartModel = $this->getPieChartModel();
+        $errorMessage = $this->errorMessage ?? null;
 
-        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
+        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel','errorMessage'));
     }
 }

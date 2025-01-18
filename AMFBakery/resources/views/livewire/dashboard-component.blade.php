@@ -160,17 +160,26 @@
 
     <!-- zoeken -->
     <div class="search-bar">
-            <input type="text" wire:model="searchTerm" placeholder="Search errors...">
+        <form action="/dashboard" method="GET">
 
-                <input type="date" wire:model="startDate" placeholder="Start Date">
-                <input type="date" wire:model="endDate" placeholder="End Date">
+            <input type="text" name="searchTerm" placeholder="Search errors...">
 
-                <button wire:click="search">Search</button>
+                <input type="date" name="startDate" placeholder="Start Date">
+                <input type="date" name="endDate" placeholder="End Date">
+                <input type="hidden" name="searchTriggered" id="searchTriggered" value="false">
+                <input type="hidden" name="errorMessage" id="errorMessage" value="false">
+
+                <button type="submit" onclick="document.getElementById('searchTriggered').value='true'">Search</button>
+
+
+            </form>
         </div>
 
-    @if ($errorMessage)
-        <p class="error-message">{{ $errorMessage }}</p>
-    @endif
+        @if(session()->has('errorMessage'))
+        <div class="error-message">
+            {{ session('errorMessage') }}
+        </div>
+        @endif
 
     <div class="container">
         <div class="box" wire:click="redirectToChart('column')">
@@ -202,5 +211,4 @@
     </div>
 
 </div>
-
 

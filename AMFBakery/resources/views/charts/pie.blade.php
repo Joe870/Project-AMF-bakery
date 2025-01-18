@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vergrote Staaf Diagram</title>
+    <title>Vergrote Lineaire Grafiek</title>
     @livewireStyles
     @include('includes/navbar')
     <link rel="stylesheet" href="{{ asset('css/charts.css') }}">
+
 </head>
+
 <body>
 
     <div class="search-bar">
-        <form action="/dashboard/column-chart" method="GET">
+        <form action="/dashboard/pie-chart" method="GET">
 
             <input type="text" name="searchTerm" placeholder="Search errors...">
 
@@ -24,7 +26,6 @@
 
             </form>
         </div>
-
         @if(session()->has('errorMessage'))
         <div class="error-message">
             {{ session('errorMessage') }}
@@ -32,13 +33,15 @@
         @endif
 
 <div class="chart-container">
-    <livewire:livewire-column-chart
 
-    :column-chart-model="$columnChartModel"
-    key="{{ $columnChartModel->reactiveKey() }}" />
+    <livewire:livewire-pie-chart
+
+    :pie-chart-model="$pieChartModel"
+    key="{{ $pieChartModel->reactiveKey() }}" />
     @livewireScripts
     @livewireChartsScripts
 </div>
 
 </body>
 </html>
+
