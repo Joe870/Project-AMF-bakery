@@ -19,38 +19,38 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
+//
+//Route::get('/csv', [alarmHistoryController::class, 'show']);
+//Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
+//
+//Route::get('/hello', [Welcome::class, "hello"]);
+//
+//Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("upload");
+//Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("DisplayUpload");
 
-Route::get('/csv', [alarmHistoryController::class, 'show']);
-Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/upload', [RdbController::class, 'showFiles'])->name('files.list');
 
-Route::get('/hello', [Welcome::class, "hello"]);
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/column-chart', function () {
+            $columnChartModel = (new DashboardComponent())->getColumnChartModel();
+            return view('charts.column', compact('columnChartModel'));
+        })->name('charts.column');
 
-Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("upload");
-Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("DisplayUpload");
-Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
-Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
+        Route::get('/line-chart', function () {
+            $lineChartModel = (new DashboardComponent())->getLineChartModel();
+            return view('charts.line', compact('lineChartModel'));
+        })->name('charts.line');
 
+        Route::get('/pie-chart', function () {
+            $pieChartModel = (new DashboardComponent())->getPieChartModel();
+            return view('charts.pie', compact('pieChartModel'));
+        })->name('charts.pie');
 
-Route::get('/dashboard/column-chart', function () {
-    $columnChartModel = (new DashboardComponent())->getColumnChartModel();
-
-    return view('charts.column', compact('columnChartModel'));
-})->name('charts.column');
-
-
-Route::get('/dashboard/line-chart', function () {
-    $lineChartModel = (new DashboardComponent())->getLineChartModel();
-
-    return view('charts.line', compact('lineChartModel'));
-})->name('charts.line');
-
-Route::get('/dashboard/pie-chart', function () {
-    $pieChartModel = (new DashboardComponent())->getPieChartModel();
-    return view('charts.pie', compact('pieChartModel'));
-})->name('charts.pie');
+        Route::view('/columnchart', 'column')->name('dashboard.columnchart');
+    });
+});
 
 Route::view('/chart' ,'chart')->name('chart-view');
-
-Route::view('/dashboard/columnchart', 'column')->name('dashboard.columnchart');
-Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
+//Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
 

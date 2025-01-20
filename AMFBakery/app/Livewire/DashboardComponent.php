@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\lineChartModel;
+use Asantibanez\LivewireCharts\Models\LineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 use App\Models\AlarmHistory;
 use Carbon\Carbon;
