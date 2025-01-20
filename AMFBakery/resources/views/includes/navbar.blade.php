@@ -11,13 +11,22 @@
 </nav>
 
 <style>
+    /* Ensure no gaps on the body */
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+
     nav {
         background-color: #e0e0e0;
         color: black;
         padding: 10px 0;
-        width: 100%;
+        width: 100%; /* Updated width */
         display: flex;
         align-items: center;
+        height: 70px;
+        position: relative; /* Ensures it covers the whole page width */
+        box-sizing: border-box;
     }
 
     .logo-container img {
@@ -36,7 +45,6 @@
 
     nav ul li {
         margin: 0 15px;
-
     }
 
     nav ul li a {

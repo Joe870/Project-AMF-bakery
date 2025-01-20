@@ -5,6 +5,8 @@ use App\Http\Controllers\Welcome;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RdbController;
 use App\Livewire\DashboardComponent;
+use App\Livewire\LineChart;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -22,6 +24,7 @@ Route::get('/csv', [alarmHistoryController::class, 'show']);
 Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
 
 Route::get('/hello', [Welcome::class, "hello"]);
+
 Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile']);
 Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
 Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
@@ -44,4 +47,9 @@ Route::get('/dashboard/pie-chart', function () {
     $pieChartModel = (new DashboardComponent())->getPieChartModel();
     return view('charts.pie', compact('pieChartModel'));
 })->name('charts.pie');
+
+Route::view('/chart' ,'chart')->name('chart-view');
+
+Route::view('/dashboard/columnchart', 'column')->name('dashboard.columnchart');
 Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
+
