@@ -18,45 +18,6 @@ class DashboardComponent extends Component
     public $endDate = '';
     public $urgentFilter = '';
 
-
-    // regelt alle fouten na klikken op de zoek button
-    // public function search()
-    // {
-    //     $this->errorMessage = '';
-    //     $this->errors = [];
-
-    //     if (empty($this->searchTerm) && (empty($this->startDate) || empty($this->endDate))) {
-    //         $this->errorMessage = 'Please provide a search term or a date range.';
-    //         return;
-    //     }
-
-    //     if (!empty($this->startDate) && !empty($this->endDate)) {
-    //         if (Carbon::parse($this->startDate)->gt(Carbon::parse($this->endDate))) {
-    //             $this->errorMessage = 'Invalid date range. Start date must be earlier than or equal to the end date.';
-    //             return;
-    //         }
-    //     }
-
-    //     $query = AlarmHistory::query();
-
-    //     $this->errors = $query->select('Message', \DB::raw('COUNT(*) as count'))
-    //         ->groupBy('Message')
-    //         ->orderByDesc('count')
-    //         ->pluck('Message')
-    //         ->toArray();
-
-    //     if (empty($this->errors)) {
-    //         $this->errorMessage = 'No results found for the given criteria.';
-    //         return;
-    //     }
-
-    //     if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $this->searchTerm . '%'])->exists() && empty($this->startDate) ) {
-    //         $this->errorMessage = 'No results found for the given searchterm.';
-    //         return;
-
-    //     }
-    // }
-
     // stuurt je naar de bijbehorende webpagina
     public function redirectToChart($chartType)
     {
@@ -68,8 +29,6 @@ class DashboardComponent extends Component
             return redirect()->route('charts.pie');
         }
     }
-
-
 
     // checkt of de zoekterm bestaat in de database en returnt een boolean
     public function doesSearchTermExist($searchTerm)
@@ -86,61 +45,37 @@ class DashboardComponent extends Component
 
     }
 
-
-
-    public function applyFilters($query, $searchTriggered = false)
+    public function applyFiltersAndErrors($query, $searchTriggered = false)
     {
-        session()->forget('errorMessage'); // Clear any previous session error message
+        // maakt the session errormessage leeg
+        session()->forget('errorMessage');
 
-        $urgentFilter = request()->query('priority'); // Check priority filter (urgent or normal)
-
+        $urgentFilter = request()->query('urgentFilter', false);
         $startDate = request()->query('startDate');
         $endDate = request()->query('endDate');
         $searchTerm = request()->query('searchTerm');
-        $this->errorMessage = '';
-        $errorMessage = request()->query('errorMessage');
         $this->errors = [];
 
         $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
 
-        //if u click on search without inputting a term or date range
-        if ($searchTriggered && empty($searchTerm) && (empty($startDate) || empty($endDate)))  {
+        // als er niks is ingevult en op search is geklikt
+        if ($searchTriggered && empty($searchTerm) && !$urgentFilter && (empty($startDate) || empty($endDate))) {
             session()->put('errorMessage', 'Please provide a search term or a date range.');
         }
 
-
+        // als de eerste datum na de tweede datum is
         if ($searchTriggered && !empty($startDate) && !empty($endDate)) {
             if (Carbon::parse($startDate)->gt(Carbon::parse($endDate))) {
-                session()->put('errorMessage','Invalid date range. Start date must be earlier than or equal to the end date.');
+                session()->put('errorMessage', 'Invalid date range. Start date must be earlier than or equal to the end date.');
             }
         }
 
-        $testingquery = AlarmHistory::query();
-
-        if ($urgentFilter === 'urgent') {
-            $query->where('priority', 'Urgent');
-        } elseif ($urgentFilter === 'low') {
-            $query->where('priority', 'Low');
-        }
-
-
-        $errors = $testingquery->select('Message', \DB::raw('COUNT(*) as count'))
-            ->groupBy('Message')
-            ->orderByDesc('count')
-            ->pluck('Message')
-            ->toArray();
-
-        if ($searchTriggered && empty($errors)) {
-            session()->put('errorMessage','No results found for the given criteria.');
-        }
-
-
-        if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists() && empty($startDate) ) {
+        // als er geen resultaten gevonden
+        if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists() ) {
             session()->put('errorMessage','No results found for the given searchterm.');
         }
 
-
-        // Apply date range filter
+        // pas de tijd filters toe
         if (!empty($startDate) && !empty($endDate) && $this->doesDateRangeExist($startDate, $endDate)) {
             if (Carbon::parse($startDate)->lte(Carbon::parse($endDate))) {
                 $query->whereBetween('EventTime', [
@@ -150,24 +85,28 @@ class DashboardComponent extends Component
             }
         }
 
-        // Apply search term filter
+        // pas de zoekfilter toe
         if (!empty($searchTerm) && $this->doesSearchTermExist($searchTerm)) {
             $searchTerm = strtolower(trim($searchTerm));
             $query->whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%']);
         }
 
-
+        // pas de urgent filter toe
+        if ($urgentFilter) {
+            $query->where('priority', 'Urgent');
+        }
     }
 
     public function getColumnChartModel()
     {
 
-        $chart = new ColumnChartModel();
-        $chart->setTitle('Alarms Over Time');
+        $chart = (new ColumnChartModel())
+            ->setHorizontal()
+            ->setDataLabelsEnabled(true);
 
         $query = AlarmHistory::query();
         $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
-        $this->applyFilters($query, $searchTriggered);
+        $this->applyFiltersAndErrors($query, $searchTriggered);
 
 
         $data = $query->select(
@@ -198,7 +137,7 @@ class DashboardComponent extends Component
 
         // maak de query aan en pas filters toe
         $query = AlarmHistory::query();
-        $this->applyFilters($query);
+        $this->applyFiltersAndErrors($query);
 
         // data ophalen uit de database
 
@@ -210,7 +149,6 @@ class DashboardComponent extends Component
         ->groupBy('Message')
         ->orderBy(\DB::raw('COUNT(*)'), 'desc')
         ->get();
-
 
         if (!empty($this->startDate) && !empty($this->endDate)) {
 
@@ -231,13 +169,14 @@ class DashboardComponent extends Component
         return $chart;
     }
 
-
-
     public function getPieChartModel()
     {
-        $chart = new PieChartModel();
+        $chart = (new PieChartModel())
+        ->setDataLabelsEnabled(true);
+
+
         $query = AlarmHistory::query();
-        $this->applyFilters($query);
+        $this->applyFiltersAndErrors($query);
 
 
         $data = $query->select(
@@ -264,7 +203,6 @@ class DashboardComponent extends Component
         foreach ($data as $item) {
             $chart->addSlice($item->Message, $item->alarm_count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
-
 
         return $chart;
     }
