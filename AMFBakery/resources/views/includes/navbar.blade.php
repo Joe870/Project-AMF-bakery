@@ -1,14 +1,12 @@
 <nav>
     <ul>
         <div class="logo-container">
-            <a href="https://amfbakery.com/" target="_blank">
-                <img src="{{ asset('images/logo.webp') }}" alt="Logo">
-            </a>
+            <a href="https://amfbakery.com/" target="_blank"></a>
+
+            <img src="{{ asset('images/logo.webp') }}" alt="Logo">
         </div>
         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li><a href="{{ route('login') }}">Login</a></li>
-        <li><a href="{{ route('register') }}">Register</a></li>
-        <li><a href="{{ route('profile') }}">Profile</a></li>
+        <li><a href="{{route('profile') }}">profile</a></li>
     </ul>
 </nav>
 

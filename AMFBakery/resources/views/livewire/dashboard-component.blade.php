@@ -18,16 +18,18 @@
 
         .container {
             display: grid;
-            grid-template-areas: "box1 pie"
-                                 "box2 pie"
-                                 "error error";
-            grid-template-columns: 7fr 3fr;
-            grid-template-rows: repeat(2, 200px);
+            grid-template-areas: "box1 box1 pie"
+                         "box2 box2 pie"
+                         "error error error";
+            grid-template-rows: 300px 300px 300px;
+            grid-template-columns: 400px 400px 400px;
             gap: 20px;
-            max-width: 100%;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-            margin-bottom: 30px;
         }
+
+
 
         .box1, .box2, .box-large, .pie-box {
             background-color: #e0e0e0;
