@@ -4,43 +4,21 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Asantibanez\LivewireCharts\Models\ColumnChartModel;
-use Asantibanez\LivewireCharts\Models\LineChartModel;
+use Asantibanez\LivewireCharts\Models\lineChartModel;
 use Asantibanez\LivewireCharts\Models\PieChartModel;
 use App\Models\AlarmHistory;
+use Carbon\Carbon;
 
 class DashboardComponent extends Component
 {
     public $searchTerm = '';
     public $errorMessage = '';
     public $errors = [];
+    public $startDate = '';
+    public $endDate = '';
+    public $urgentFilter = '';
 
-    public function search()
-    {
-        $this->errorMessage = '';
-        $this->errors = [];
-        if (empty($this->searchTerm)) {
-            $this->errorMessage = 'Please enter a search term.';
-        }
-        $this->getFilteredErrors();
-    }
-
-
-    private function getFilteredErrors()
-    {
-        $errors = AlarmHistory::where('Message', 'LIKE', '%' . $this->searchTerm . '%')
-            ->select('Message', \DB::raw('COUNT(*) as count'))
-            ->groupBy('Message')
-            ->orderByDesc('count')
-            ->pluck('Message')
-            ->toArray();
-
-        if (empty($errors)) {
-            $this->errorMessage = 'No results found for "' . $this->searchTerm . '". Please try another term.';
-        }
-        $this->errors = $errors;
-    }
-
-
+    // stuurt je naar de bijbehorende webpagina
     public function redirectToChart($chartType)
     {
         if ($chartType == 'column') {
@@ -52,169 +30,179 @@ class DashboardComponent extends Component
         }
     }
 
+    // checkt of de zoekterm bestaat in de database en returnt een boolean
     public function doesSearchTermExist($searchTerm)
     {
-        // Check if the search term exists in the database
         return AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists();
     }
 
+    //checkt of er data is tussen de 2 gegeven tijden
+    public function doesDaterangeExist($startDate, $endDate){
+        return AlarmHistory::whereBetween('EventTime', [
+            Carbon::parse($startDate)->startOfDay(),
+            Carbon::parse($endDate)->endOfDay(),
+        ])->exists();
+
+    }
+
+    public function applyFiltersAndErrors($query, $searchTriggered = false)
+    {
+        // maakt the session errormessage leeg
+        session()->forget('errorMessage');
+
+        $urgentFilter = request()->query('urgentFilter', false);
+        $startDate = request()->query('startDate');
+        $endDate = request()->query('endDate');
+        $searchTerm = request()->query('searchTerm');
+        $this->errors = [];
+
+        $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
+
+        // als er niks is ingevult en op search is geklikt
+        if ($searchTriggered && empty($searchTerm) && !$urgentFilter && (empty($startDate) || empty($endDate))) {
+            session()->put('errorMessage', 'Please provide a search term or a date range.');
+        }
+
+        // als de eerste datum na de tweede datum is
+        if ($searchTriggered && !empty($startDate) && !empty($endDate)) {
+            if (Carbon::parse($startDate)->gt(Carbon::parse($endDate))) {
+                session()->put('errorMessage', 'Invalid date range. Start date must be earlier than or equal to the end date.');
+            }
+        }
+
+        // als er geen resultaten gevonden
+        if (!AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])->exists() ) {
+            session()->put('errorMessage','No results found for the given searchterm.');
+        }
+
+        // pas de tijd filters toe
+        if (!empty($startDate) && !empty($endDate) && $this->doesDateRangeExist($startDate, $endDate)) {
+            if (Carbon::parse($startDate)->lte(Carbon::parse($endDate))) {
+                $query->whereBetween('EventTime', [
+                    Carbon::parse($startDate)->startOfDay(),
+                    Carbon::parse($endDate)->endOfDay(),
+                ]);
+            }
+        }
+
+        // pas de zoekfilter toe
+        if (!empty($searchTerm) && $this->doesSearchTermExist($searchTerm)) {
+            $searchTerm = strtolower(trim($searchTerm));
+            $query->whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%']);
+        }
+
+        // pas de urgent filter toe
+        if ($urgentFilter) {
+            $query->where('priority', 'Urgent');
+        }
+    }
+
+
     public function getColumnChartModel()
     {
-        // Pak filter en urgent-status indien aangegeven
-        $filter = request()->query('filter');
-        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
-
-        // Begin met de query
-        $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
-
-        // Voeg urgent-filter toe als urgent is aangevinkt
-        if ($isUrgent) {
-            $query->where('priority', 'Urgent');
-        }
-
-        // Voeg filter toe als er een filter is
-        if ($filter) {
-            $query->where('Message', 'LIKE', "%{$filter}%");
-        }
-
-        // Haal data op en groepeer op Message
-        $data = $query->groupBy('Message')
-            ->orderByDesc('count')
-            ->take(8)
-            ->get();
-
         $chart = (new ColumnChartModel())
             ->setHorizontal()
-            ->setDataLabelsEnabled(true); // Added here to disable labels
+            ->setDataLabelsEnabled(true);
 
+        $query = AlarmHistory::query();
+        $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
+        $this->applyFiltersAndErrors($query, $searchTriggered);
 
-        // Stel de titel in afhankelijk van de filters
-        if ($isUrgent && $filter) {
-            $chart->setTitle('Urgent Errors with Filter');
-        } elseif ($isUrgent) {
-            $chart->setTitle('Urgent Errors');
-        } elseif ($filter) {
-            $chart->setTitle('Errors with Filter');
-        } else {
-            $chart->setTitle('Error frequency');
-        }
+        // Group by Message instead of event_date
+        $data = $query->select(
+            'Message',  // Grouping by message now
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('Message')  // Grouping by Message
+        ->orderByDesc(\DB::raw('COUNT(*)'))  // Sorting by the most frequent messages
+        ->get();
 
-        //Voeg data toe aan de chart
         foreach ($data as $item) {
-            $chart->addColumn($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+            $chart->addColumn(
+                (string) $item->Message,  // Using the message as the label for the column
+                (int) $item->alarm_count,
+                '#' . substr(md5($item->Message), 0, 6),  // Generate color based on the message
+                ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+            );
         }
 
         return $chart;
     }
 
+
+    // lineiare grafiek
     public function getLineChartModel()
     {
-        // Pak filter en urgent-status indien aangegeven
-        $filter = request()->query('filter');
-        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
-
-        // Begin met een basisquery
-        $query = AlarmHistory::select(
-            \DB::raw('DATE(EventTime) as event_date'),
-            \DB::raw('COUNT(*) as alarm_count')
-        );
-
-        // Voeg urgent-filter toe als urgent is aangevinkt
-        if ($isUrgent) {
-            $query->where('priority', 'Urgent');
-        }
-
-        // Voeg filter toe als er een filter is
-        if ($filter) {
-            $query->where('Message', 'LIKE', "%{$filter}%");
-        }
-
-        // Haal data op en groepeer op event_date
-        $data = $query->groupBy('event_date')
-            ->orderBy('event_date')
-            ->get();
-
         $chart = new LineChartModel();
 
-        // Stel de titel in afhankelijk van de filters
-        if ($isUrgent && $filter) {
-            $chart->setTitle("Urgent Alarms Over Time for '{$filter}'");
-        } elseif ($isUrgent) {
-            $chart->setTitle('Urgent Alarms Over Time');
-        } elseif ($filter) {
-            $chart->setTitle("Alarms Over Time for '{$filter}'");
-        } else {
-            $chart->setTitle('Alarms Over Time');
+        // maak de query aan en pas filters toe
+        $query = AlarmHistory::query();
+        $this->applyFiltersAndErrors($query);
+
+        // data ophalen uit de database
+
+        $data = $query->select(
+            'Message',
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('Message')
+        ->orderBy(\DB::raw('COUNT(*)'), 'desc')
+        ->get();
+
+        if (!empty($this->startDate) && !empty($this->endDate)) {
+
+            $chart->setTitle('Alarms between ' . $this->startDate . 'and ' . $this->endDate);
+        }else{
+            $chart->setTitle('Alarms over time');
         }
 
-        // Voeg data toe aan de chart
         foreach ($data as $item) {
-            $chart->addPoint($item->event_date, $item->alarm_count);
+            $shortLabel = strlen($item->messages) > 15 ? substr($item->messages, 0, 12) . '...' : $item->messages;
+
+            $chart->addPoint($shortLabel,
+            (int) $item->alarm_count,
+            ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+        );
         }
 
         return $chart;
     }
-
 
     public function getPieChartModel()
     {
-        $searchTerm = strtolower(trim($this->searchTerm));
-        if ($searchTerm != '' && $this->doesSearchTermExist($searchTerm)) {
-            $data = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->get();
+        $chart = (new PieChartModel())
+        ->setDataLabelsEnabled(true);
 
-            $otherCount = AlarmHistory::whereRaw('LOWER(Message) LIKE ?', ['%' . $searchTerm . '%'])
-                ->whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
-        } else {
-            $data = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
-                ->groupBy('Message')
-                ->orderByDesc('count')
-                ->take(3)
-                ->get();
+
+        $query = AlarmHistory::query();
+        $this->applyFiltersAndErrors($query);
+
+
+        $data = $query->select(
+            'Message',
+            \DB::raw('COUNT(*) as alarm_count'),
+            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
+        )
+        ->groupBy('Message')
+        ->orderByDesc(\DB::raw('COUNT(*)'))
+        ->get();
+
+        if (empty($this->searchTerm) && !$this->doesSearchTermExist($this->searchTerm) && !$this->doesDateRangeExist($this->startDate, $this->endDate)) {
 
             $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
-                ->select(\DB::raw('COUNT(*) as count'))
-                ->value('count');
+            ->select(\DB::raw('COUNT(*) as count'))
+            ->value('count');
+
+
+            if ($otherCount > 0) {
+                $chart->addSlice('Other', $otherCount, '#cccccc');
+            }
+
         }
-
-        // Pak filter en urgent-status indien aangegeven
-        $filter = request()->query('filter');
-        $isUrgent = request()->query('urgent'); // Check of urgent is aangevinkt
-        // Begin met de query
-        $query = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'));
-
-        // Voeg urgent-filter toe als urgent is aangevinkt
-        if ($isUrgent) {
-            $query->where('priority', 'Urgent');
-        }
-
-        // Haal data op en groepeer op Message
-        $data = $query->groupBy('Message')
-            ->orderByDesc('count')
-            ->take(8)
-            ->get();
-
-        $chart = new PieChartModel();
-
-        // Stel de titel in afhankelijk van de filters
-        if ($isUrgent && $filter) {
-            $chart->setTitle('Urgent Errors with Filter');
-        } elseif ($isUrgent) {
-            $chart->setTitle('Urgent Errors');
-        } elseif ($filter) {
-            $chart->setTitle('Errors with Filter');
-        } else {
-            $chart->setTitle('Error frequency');
-        }
-
-        // Voeg data toe aan de chart
         foreach ($data as $item) {
-            $chart->addSlice($item->Message, $item->count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
+            $chart->addSlice($item->Message, $item->alarm_count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
         }
 
         return $chart;
@@ -226,14 +214,15 @@ class DashboardComponent extends Component
         $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
             ->groupBy('Message')
             ->orderByDesc('count')
-            ->take(10)
+            ->take(3)
             ->pluck('Message')
             ->toArray();
 
         $columnChartModel = $this->getColumnChartModel();
         $lineChartModel = $this->getLineChartModel();
         $pieChartModel = $this->getPieChartModel();
+        $errorMessage = $this->errorMessage ?? null;
 
-        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel'));
+        return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel','errorMessage'));
     }
 }
