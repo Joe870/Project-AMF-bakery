@@ -267,7 +267,7 @@
                 key="{{ $columnChartModel->reactiveKey() }}" />
         </div>
 
-        <div id="main-section" class="box-large" onclick="window.location.href='alle-errors.html'">
+        <div id="main-section" class="box-large" onclick="window.location.href='/dashboard/all-errors'">
             <h2>All Errors</h2>
             <ul>
                 @foreach ($top3errors as $error)

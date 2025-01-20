@@ -53,3 +53,8 @@ Route::view('/chart' ,'chart')->name('chart-view');
 Route::view('/dashboard/columnchart', 'column')->name('dashboard.columnchart');
 Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
 
+Route::get('/dashboard/all-errors', function () {
+    $errors = (new DashboardComponent())->allError();
+
+    return view('charts.error', compact('errors'));
+})->name('charts.error');
