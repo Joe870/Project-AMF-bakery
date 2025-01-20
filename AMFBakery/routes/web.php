@@ -22,7 +22,9 @@ Route::get('/csv', [alarmHistoryController::class, 'show']);
 Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
 
 Route::get('/hello', [Welcome::class, "hello"]);
-Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile']);
+
+Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("upload");
+Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("DisplayUpload");
 Route::get('/', [RdbController::class, 'showFiles'])->name('files.list');
 Route::post('/rdbconversion/csv_file', [RdbController::class, "convert"])->name("convert");
 
