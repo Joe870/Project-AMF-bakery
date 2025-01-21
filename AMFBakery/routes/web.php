@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RdbController;
 use App\Livewire\DashboardComponent;
 use App\Livewire\LineChart;
-//use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\DatabaseController;
 
 Route::redirect('/', '/dashboard')->name('root-redirect');
 Route::view('dashboard', 'dashboard')
@@ -58,3 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::view('/chart' ,'chart')->name('chart-view');
 //Route::post('rdbconversion/upload', [RdbController::class, 'uploadFile'])->name('upload.file');
 
+Route::get('/dashboard/all-errors', function () {
+    $errors = (new DashboardComponent())->allError();
+
+    return view('charts.error', compact('errors'));
+})->name('charts.error');
+
+Route::post('/clear-database', [DatabaseController::class, 'clearDatabase'])->name('clear.database');
