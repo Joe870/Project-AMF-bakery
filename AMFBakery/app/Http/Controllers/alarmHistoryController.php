@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class alarmHistoryController extends Controller
+class AlarmHistoryController extends Controller
 {
     public function show(Request $request)
     {
@@ -13,7 +13,8 @@ class alarmHistoryController extends Controller
 
         // Controleer of het bestand bestaat
         if (!file_exists($filePath)) {
-            return view('csv.show', ['data' => []])->with('message', 'Upload een CSV-bestand om te bekijken.');
+            return view('csv.show', ['data' => []])
+                ->with('message', 'Upload een CSV-bestand om te bekijken.');
         }
 
         // Open het bestand voor lezen
@@ -24,14 +25,19 @@ class alarmHistoryController extends Controller
 
         // Lees de inhoud van het CSV-bestand
         $data = [];
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+            // Convert encoding to UTF-8 if needed
+            $row = array_map(function($cell) {
+                return mb_convert_encoding($cell, 'UTF-8', 'auto');
+            }, $row);
             $data[] = $row;
         }
         fclose($handle);
 
         // Controleer of het bestand leeg is
         if (empty($data)) {
-            return view('csv.show', ['data' => []])->with('message', 'Het CSV-bestand is leeg.');
+            return view('csv.show', ['data' => []])
+                ->with('message', 'Het CSV-bestand is leeg.');
         }
 
         // Headers en data scheiden
@@ -44,14 +50,22 @@ class alarmHistoryController extends Controller
         if ($start_date || $end_date) {
             $filteredData = [];
             foreach ($data as $row) {
-                $rowDate = $row[0]; // Neem aan dat de datum in de eerste kolom staat
-                if ($start_date && $rowDate < $start_date) {
+                try {
+                    $rowDate = \DateTime::createFromFormat('Y-m-d', $row[0]); // Adjust format as needed
+                    $startDateTime = $start_date ? \DateTime::createFromFormat('Y-m-d', $start_date) : null;
+                    $endDateTime = $end_date ? \DateTime::createFromFormat('Y-m-d', $end_date) : null;
+
+                    if ($startDateTime && $rowDate < $startDateTime) {
+                        continue;
+                    }
+                    if ($endDateTime && $rowDate > $endDateTime) {
+                        continue;
+                    }
+                    $filteredData[] = $row;
+                } catch (\Exception $e) {
+                    // Skip invalid dates
                     continue;
                 }
-                if ($end_date && $rowDate > $end_date) {
-                    continue;
-                }
-                $filteredData[] = $row;
             }
             $data = $filteredData;
         }
