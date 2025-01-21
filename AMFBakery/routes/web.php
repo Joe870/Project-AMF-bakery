@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\alarmHistoryController;
 use App\Http\Controllers\Welcome;
+use App\Http\Controllers\RdbController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RdbController;
 use App\Livewire\DashboardComponent;
-use App\Livewire\LineChart;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use App\Http\Controllers\DatabaseController;
 

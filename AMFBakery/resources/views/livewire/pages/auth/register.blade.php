@@ -21,9 +21,16 @@ new #[Layout('layouts.guest')] class extends Component
     public function register(): void
     {
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'min:10', 'confirmed',
+            Rules\Password::defaults()->min(10)
+                ->letters()    // Requires alphabetic characters
+                ->numbers()    // Requires numeric characters
+                ->symbols()    // Requires special symbols
+                ->mixedCase(),
+
+            ]
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
