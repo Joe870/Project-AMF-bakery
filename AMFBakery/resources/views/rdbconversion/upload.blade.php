@@ -7,7 +7,7 @@
     <style>
         .uploader {
             font-family: Arial, sans-serif;
-            /*background-color: #f9f9f9;*/
+            background-color: #f9f9f9;
             margin: 0;
             padding: 40px;
             display: flex;
@@ -121,6 +121,18 @@
 
         <button type="submit">Upload</button>
     </form>
+    <button type="submit">Upload</button>
+    <label>
+        <input type="checkbox" name="consent" id="consent" required>
+        I consent to the processing of my data (<a href="{{ route('privacy.policy') }}" target="_blank">Privacy Policy</a>)
+    </label>
+
+    @if ($errors->has('consent'))
+        <div class="error-message">
+            {{ $errors->first('consent') }}
+        </div>
+    @endif
+</form>
     <p id="fallback-error" class="error-message" style="display: none;">File upload failed due to size limit.</p>
 </div>
 </body>

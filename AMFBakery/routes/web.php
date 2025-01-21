@@ -21,14 +21,9 @@ Route::view('profile', 'profile')
 require __DIR__.'/auth.php';
 
 Route::post('/validate-upload-csv', [AlarmHistoryController::class, 'uploadValidateCsv'])->name('validate.upload.csv');
-//
-//Route::get('/csv', [alarmHistoryController::class, 'show']);
-//Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
-//
-//Route::get('/hello', [Welcome::class, "hello"]);
-//
-//Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("upload");
-//Route::get('/rdbconversion/upload', [RdbController::class, 'uploadFile'])->name("DisplayUpload");
+
+Route::get('/csv', [alarmHistoryController::class, 'show']);
+Route::get('/alarm-history/import-from-file', [AlarmHistoryController::class, 'importCsvFromFile'])->name('alarm-history.import-file');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/upload', [RdbController::class, 'showFiles'])->name('files.list');
@@ -39,6 +34,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $columnChartModel = $dashboardComponent->getColumnChartModel(false); // Pass 'false' to disable limiting
             return view('charts.column', compact('columnChartModel'));
         })->name('charts.column');
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy.policy');
+
+Route::get('/dashboard/column-chart', function () {
+    $columnChartModel = (new DashboardComponent())->getColumnChartModel();
+
+    return view('charts.column', compact('columnChartModel'));
+})->name('charts.column');
 
         Route::get('/line-chart', function () {
             $dashboardComponent = new DashboardComponent();
