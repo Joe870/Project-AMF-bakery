@@ -100,7 +100,7 @@ class DashboardComponent extends Component
     }
 
 
-    public function getColumnChartModel()
+    public function getColumnChartModel($limitToTop10 = true)
     {
         $chart = (new ColumnChartModel())
             ->setHorizontal()
@@ -116,9 +116,12 @@ class DashboardComponent extends Component
             \DB::raw('COUNT(*) as alarm_count'),
             \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
         )
-        ->groupBy('Message')  // Grouping by Message
-        ->orderByDesc(\DB::raw('COUNT(*)'))  // Sorting by the most frequent messages
-        ->get();
+            ->groupBy('Message')  // Grouping by Message
+            ->orderByDesc(\DB::raw('COUNT(*)'))  // Sorting by the most frequent messages
+            ->when($limitToTop10, function ($query) {
+                return $query->take(10); // Limit to the 10 most common errors
+            })
+            ->get();
 
         foreach ($data as $item) {
             $chart->addColumn(
@@ -134,45 +137,59 @@ class DashboardComponent extends Component
 
 
     // lineiare grafiek
-    public function getLineChartModel()
+
+    public function getLineChartModel($limitToTop10 = true)
     {
         $chart = new LineChartModel();
 
-        // maak de query aan en pas filters toe
-        $query = AlarmHistory::query();
-        $this->applyFiltersAndErrors($query);
-
-        // data ophalen uit de database
-
-        $data = $query->select(
-            'Message',
-            \DB::raw('COUNT(*) as alarm_count'),
-            \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
-        )
-        ->groupBy('Message')
-        ->orderBy(\DB::raw('COUNT(*)'), 'desc')
-        ->get();
-
-        if (!empty($this->startDate) && !empty($this->endDate)) {
-
-            $chart->setTitle('Alarms between ' . $this->startDate . 'and ' . $this->endDate);
-        }else{
-            $chart->setTitle('Alarms over time');
-        }
-
-        foreach ($data as $item) {
-            $shortLabel = strlen($item->messages) > 15 ? substr($item->messages, 0, 12) . '...' : $item->messages;
-
-            $chart->addPoint($shortLabel,
-            (int) $item->alarm_count,
-//            ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+        $chart->setDataLabelsEnabled(true);
+        // Maak de basisquery en pas filters toe via applyFiltersAndErrors
+        $query = AlarmHistory::select(
+            \DB::raw('DATE(EventTime) as event_date'),
+            \DB::raw('COUNT(*) as alarm_count')
         );
+
+        $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
+        $this->applyFiltersAndErrors($query, $searchTriggered);
+
+        // Haal data op en groepeer op event_date
+        $data = $query->groupBy('event_date')
+            ->orderBy('event_date')
+            ->get();
+
+        // Stel de titel in afhankelijk van de filters
+        if (!empty($this->urgentFilter) && !empty($this->searchTerm)) {
+            $chart->setTitle("Urgent Alarms Over Time for '{$this->searchTerm}'");
+        } elseif (!empty($this->urgentFilter)) {
+            $chart->setTitle('Urgent Alarms Over Time');
+        } elseif (!empty($this->searchTerm)) {
+            $chart->setTitle("Alarms Over Time for '{$this->searchTerm}'");
+        } elseif (!empty($this->startDate) && !empty($this->endDate)) {
+            $chart->setTitle("Alarms from {$this->startDate} to {$this->endDate}");
+        } else {
+            $chart->setTitle('Alarms Over Time');
         }
+
+        // Voeg de data toe aan de chart
+foreach ($data as $item) {
+    $topMessagesWithCounts = AlarmHistory::whereDate('EventTime', $item->event_date)
+        ->select('Message', \DB::raw('COUNT(*) as count'))
+        ->groupBy('Message')
+        ->orderByDesc('count')
+        ->limit(10)
+        ->get()
+        ->map(function ($error) {
+            return "{$error->Message} ({$error->count} occurrences)";
+        })
+        ->toArray();
+    $tooltip = "Date: {$item->event_date}<br>Top Errors:<br>" . implode("<br>", $topMessagesWithCounts);
+    $chart->addPoint($item->event_date, $item->alarm_count, ['tooltip' => $tooltip]);
+}
 
         return $chart;
     }
 
-    public function getPieChartModel()
+    public function getPieChartModel($limitToTop10 = true)
     {
         $chart = (new PieChartModel())
         ->setDataLabelsEnabled(true);
@@ -189,6 +206,9 @@ class DashboardComponent extends Component
         )
         ->groupBy('Message')
         ->orderByDesc(\DB::raw('COUNT(*)'))
+        ->when($limitToTop10, function ($query) {
+            return $query->take(10); // Limit to the 10 most common errors
+        })
         ->get();
 
         if (empty($this->searchTerm) && !$this->doesSearchTermExist($this->searchTerm) && !$this->doesDateRangeExist($this->startDate, $this->endDate)) {
@@ -220,9 +240,9 @@ class DashboardComponent extends Component
             ->pluck('Message')
             ->toArray();
 
-        $columnChartModel = $this->getColumnChartModel();
-        $lineChartModel = $this->getLineChartModel();
-        $pieChartModel = $this->getPieChartModel();
+        $columnChartModel = $this->getColumnChartModel(true);
+        $lineChartModel = $this->getLineChartModel(true);
+        $pieChartModel = $this->getPieChartModel(true);
         $errorMessage = $this->errorMessage ?? null;
 
         return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel','errorMessage'));

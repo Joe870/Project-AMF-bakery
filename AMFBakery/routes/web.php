@@ -34,17 +34,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('dashboard')->group(function () {
         Route::get('/column-chart', function () {
-            $columnChartModel = (new DashboardComponent())->getColumnChartModel();
+            $dashboardComponent = new DashboardComponent();
+            $columnChartModel = $dashboardComponent->getColumnChartModel(false); // Pass 'false' to disable limiting
             return view('charts.column', compact('columnChartModel'));
         })->name('charts.column');
 
         Route::get('/line-chart', function () {
-            $lineChartModel = (new DashboardComponent())->getLineChartModel();
+            $dashboardComponent = new DashboardComponent();
+            $lineChartModel = $dashboardComponent->getLineChartModel(false); // Pass 'false' to disable limiting
             return view('charts.line', compact('lineChartModel'));
         })->name('charts.line');
 
         Route::get('/pie-chart', function () {
-            $pieChartModel = (new DashboardComponent())->getPieChartModel();
+            $dashboardComponent = new DashboardComponent();
+            $pieChartModel = $dashboardComponent->getPieChartModel(false); // Pass 'false' to disable limiting
             return view('charts.pie', compact('pieChartModel'));
         })->name('charts.pie');
 
