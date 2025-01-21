@@ -225,4 +225,18 @@ class DashboardComponent extends Component
 
         return view('livewire.dashboard-component', compact('top3errors', 'columnChartModel', 'lineChartModel', 'pieChartModel','errorMessage'));
     }
+
+    public function allError()
+    {
+        $query = AlarmHistory::query();
+    
+        $this->applyFiltersAndErrors($query);
+    
+        $errors = $query->select('Message', 'EventTime', 'priority')
+            ->orderBy('EventTime', 'desc')
+            ->get();
+    
+        return $errors;
+    }
+    
 }
