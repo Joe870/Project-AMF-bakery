@@ -3,10 +3,11 @@
         <div class="logo-container">
             <a href="https://amfbakery.com/" target="_blank"></a>
 
-            <img src="{{ asset('images/logo.webp') }}" alt="Logo">
+            <img src="{{ asset('images/logo.webp') }}" alt="AMF Logo">
         </div>
+        <li><a href="{{ route('files.list') }}">upload</a></li>
         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li><a href="{{route('profile') }}">profile</a></li>
+        <li><a href="{{ route('profile') }}">profile</a></li>
     </ul>
 </nav>
 
@@ -15,6 +16,7 @@
     html, body {
         margin: 0;
         padding: 0;
+        font-family: Arial, sans-serif;
     }
 
     nav {

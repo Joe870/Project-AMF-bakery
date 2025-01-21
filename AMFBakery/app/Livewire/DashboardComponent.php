@@ -28,6 +28,8 @@ class DashboardComponent extends Component
         } elseif ($chartType == 'pie') {
             return redirect()->route('charts.pie');
         }
+        //reviewed by Jasper:
+        // This bit of code is not used anywhere, either explain why its not being used or remove it.
     }
 
     // checkt of de zoekterm bestaat in de database en returnt een boolean
@@ -123,7 +125,7 @@ class DashboardComponent extends Component
                 (string) $item->Message,  // Using the message as the label for the column
                 (int) $item->alarm_count,
                 '#' . substr(md5($item->Message), 0, 6),  // Generate color based on the message
-                ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+//                ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
             );
         }
 
@@ -163,7 +165,7 @@ class DashboardComponent extends Component
 
             $chart->addPoint($shortLabel,
             (int) $item->alarm_count,
-            ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
+//            ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
         );
         }
 
@@ -214,7 +216,7 @@ class DashboardComponent extends Component
         $top3errors = AlarmHistory::select('Message', \DB::raw('COUNT(*) as count'))
             ->groupBy('Message')
             ->orderByDesc('count')
-            ->take(3)
+            ->take(10)
             ->pluck('Message')
             ->toArray();
 

@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload CSV File</title>
     <style>
-        body {
+        .uploader {
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            /*background-color: #f9f9f9;*/
             margin: 0;
             padding: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 75vh;
         }
 
         form {
@@ -83,42 +83,45 @@
     </script>
 </head>
 <body>
-<form id="csv-upload-form" action="{{ route('validate.upload.csv') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    <label for="csv_file">Upload CSV File:</label>
-    <input type="file" name="csv_file" accept=".csv" required>
-    @if ($errors->has('csv_file'))
-        <div class="error-message">
-            {{ $errors->first('csv_file') }}
-        </div>
-    @endif
+@include('includes/navbar')
+<div class="uploader">
+    <form id="csv-upload-form" action="{{ route('validate.upload.csv') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <label for="csv_file">Upload CSV File:</label>
+        <input type="file" name="csv_file" accept=".csv" required>
+        @if ($errors->has('csv_file'))
+            <div class="error-message">
+                {{ $errors->first('csv_file') }}
+            </div>
+        @endif
 
-    @if (session('error_message'))
-        <div class="error-message">
-            {{ session('error_message') }}
-        </div>
-    @endif
+        @if (session('error_message'))
+            <div class="error-message">
+                {{ session('error_message') }}
+            </div>
+        @endif
 
-    @if (session('expected_headers') && session('actual_headers'))
-        <div>
-            <p><strong>Expected Headers:</strong></p>
-            <ul>
-                @foreach (session('expected_headers') as $header)
-                    <li>{{ $header }}</li>
-                @endforeach
-            </ul>
+        @if (session('expected_headers') && session('actual_headers'))
+            <div>
+                <p><strong>Expected Headers:</strong></p>
+                <ul>
+                    @foreach (session('expected_headers') as $header)
+                        <li>{{ $header }}</li>
+                    @endforeach
+                </ul>
 
-            <p><strong>Actual Headers:</strong></p>
-            <ul>
-                @foreach (session('actual_headers') as $header)
-                    <li>{{ $header }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+                <p><strong>Actual Headers:</strong></p>
+                <ul>
+                    @foreach (session('actual_headers') as $header)
+                        <li>{{ $header }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-    <button type="submit">Upload</button>
-</form>
+        <button type="submit">Upload</button>
+    </form>
     <p id="fallback-error" class="error-message" style="display: none;">File upload failed due to size limit.</p>
+</div>
 </body>
 </html>

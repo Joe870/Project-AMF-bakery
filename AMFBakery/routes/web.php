@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RdbController;
 use App\Livewire\DashboardComponent;
 use App\Livewire\LineChart;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+//use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
+Route::redirect('/', '/dashboard')->name('root-redirect');
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
