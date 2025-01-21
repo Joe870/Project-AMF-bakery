@@ -7,6 +7,7 @@ use App\Http\Controllers\RdbController;
 use App\Livewire\DashboardComponent;
 use App\Livewire\LineChart;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\DatabaseController;
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -58,3 +59,5 @@ Route::get('/dashboard/all-errors', function () {
 
     return view('charts.error', compact('errors'));
 })->name('charts.error');
+
+Route::post('/clear-database', [DatabaseController::class, 'clearDatabase'])->name('clear.database');
