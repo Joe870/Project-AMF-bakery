@@ -97,9 +97,9 @@ class DashboardComponent extends Component
         }
     }
 
+
     public function getColumnChartModel()
     {
-
         $chart = (new ColumnChartModel())
             ->setHorizontal()
             ->setDataLabelsEnabled(true);
@@ -108,27 +108,28 @@ class DashboardComponent extends Component
         $searchTriggered = filter_var(request()->query('searchTriggered', false), FILTER_VALIDATE_BOOLEAN);
         $this->applyFiltersAndErrors($query, $searchTriggered);
 
-
+        // Group by Message instead of event_date
         $data = $query->select(
-            \DB::raw('DATE(EventTime) as event_date'),
+            'Message',  // Grouping by message now
             \DB::raw('COUNT(*) as alarm_count'),
             \DB::raw('GROUP_CONCAT(CONCAT(DATE_FORMAT(EventTime, "%H:%i"), " - ", Message) SEPARATOR "\n") as messages')
         )
-        ->groupBy('event_date')
-        ->orderBy('event_date')
+        ->groupBy('Message')  // Grouping by Message
+        ->orderByDesc(\DB::raw('COUNT(*)'))  // Sorting by the most frequent messages
         ->get();
 
         foreach ($data as $item) {
             $chart->addColumn(
-                (string) $item->event_date,
+                (string) $item->Message,  // Using the message as the label for the column
                 (int) $item->alarm_count,
-                '#' . substr(md5($item->event_date), 0, 6),
+                '#' . substr(md5($item->Message), 0, 6),  // Generate color based on the message
                 ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
             );
         }
 
         return $chart;
     }
+
 
     // lineiare grafiek
     public function getLineChartModel()
