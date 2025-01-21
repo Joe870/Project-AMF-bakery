@@ -12,6 +12,7 @@ use Carbon\Carbon;
 class DashboardComponent extends Component
 {
     public $searchTerm = '';
+    public $showAll = false;
     public $errorMessage = '';
     public $errors = [];
     public $startDate = '';
@@ -119,7 +120,7 @@ class DashboardComponent extends Component
             ->groupBy('Message')  // Grouping by Message
             ->orderByDesc(\DB::raw('COUNT(*)'))  // Sorting by the most frequent messages
             ->when($limitToTop10, function ($query) {
-                return $query->take(10); // Limit to the 10 most common errors
+                return $query->take(10); // Limit to the 15 most common errors
             })
             ->get();
 
@@ -128,11 +129,15 @@ class DashboardComponent extends Component
                 (string) $item->Message,  // Using the message as the label for the column
                 (int) $item->alarm_count,
                 '#' . substr(md5($item->Message), 0, 6),  // Generate color based on the message
-//                ['tooltip' => '<div class="custom-tooltip">' . nl2br($item->messages) . '</div>']
             );
         }
 
         return $chart;
+    }
+
+    public function toggleShowAll()
+    {
+        $this->showAll = !$this->showAll;
     }
 
 
@@ -191,9 +196,7 @@ foreach ($data as $item) {
 
     public function getPieChartModel($limitToTop10 = true)
     {
-        $chart = (new PieChartModel())
-        ->setDataLabelsEnabled(true);
-
+        $chart = (new PieChartModel());
 
         $query = AlarmHistory::query();
         $this->applyFiltersAndErrors($query);
