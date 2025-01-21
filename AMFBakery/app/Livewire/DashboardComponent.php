@@ -207,21 +207,18 @@ foreach ($data as $item) {
         ->groupBy('Message')
         ->orderByDesc(\DB::raw('COUNT(*)'))
         ->when($limitToTop10, function ($query) {
-            return $query->take(10); // Limit to the 10 most common errors
+            return $query->take(15); // Limit to the 15 most common errors
         })
         ->get();
 
-        if (empty($this->searchTerm) && !$this->doesSearchTermExist($this->searchTerm) && !$this->doesDateRangeExist($this->startDate, $this->endDate)) {
-
+        if ($data->count() === 15) {
             $otherCount = AlarmHistory::whereNotIn('Message', $data->pluck('Message'))
-            ->select(\DB::raw('COUNT(*) as count'))
-            ->value('count');
-
+                ->select(\DB::raw('COUNT(*) as count'))
+                ->value('count');
 
             if ($otherCount > 0) {
                 $chart->addSlice('Other', $otherCount, '#cccccc');
             }
-
         }
         foreach ($data as $item) {
             $chart->addSlice($item->Message, $item->alarm_count, '#' . dechex(rand(0x100000, 0xFFFFFF)));
