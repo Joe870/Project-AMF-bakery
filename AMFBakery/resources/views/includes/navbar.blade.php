@@ -7,6 +7,15 @@
         </div>
         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
         <li><a href="{{route('profile') }}">profile</a></li>
+        <li>
+            <form action="{{ route('clear.database') }}" method="POST" style="text-align: center; margin-top: 20px;">
+                @csrf
+                <button type="submit" 
+                        style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">
+                    Clear Database
+                </button>
+            </form>
+        </li>
     </ul>
 </nav>
 
