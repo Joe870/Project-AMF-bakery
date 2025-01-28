@@ -3,27 +3,29 @@
         <div class="logo-container">
             <a href="https://amfbakery.com/" target="_blank"></a>
 
-            <img src="{{ asset('images/logo.webp') }}" alt="Logo">
+            <img src="{{ asset('images/logo.webp') }}" alt="AMF Logo">
         </div>
         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
         <li><a href="{{route('profile') }}">profile</a></li>
         <li>
-            <form action="{{ route('clear.database') }}" method="POST" style="text-align: center; margin-top: 20px;">
+            <form action="{{ route('files.list') }}" method="GET" style="display: inline;">
+                <button type="submit" class="uploadData" style="display: inline-block;">Upload</button>
+            </form>
+        </li>
+        <li style="display: inline; margin: 0; padding: 0;">
+            <form action="{{ route('clear.database') }}" method="POST" style="display: inline;">
                 @csrf
-                <button type="submit" 
-                        style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 15px;">
-                    Clear Database
-                </button>
+                <button type="submit" class="clearData" style="display: inline-block;" onclick="">Clear Data</button>
             </form>
         </li>
     </ul>
 </nav>
 
 <style>
-    /* Ensure no gaps on the body */
     html, body {
         margin: 0;
         padding: 0;
+        font-family: Arial, sans-serif;
     }
 
     nav {
@@ -58,11 +60,57 @@
 
     nav ul li a {
         color: #ed2027;
-        text-decoration: none;
+    }
+    .upload-link:hover {
+        color: black;
+        text-decoration: underline;
+/*After matching.Double-check assistant formattingjust.I saw*/
+/*        text-decoration: none;*/
         font-size: 16px;
     }
 
     nav ul li a:hover {
         color: black;
+    }
+
+    .clearData {
+        background-color: #ed2027;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        /*transition: background-color 0.3s ease;*/
+    }
+    .uploadData {
+        background-color: #00d83c;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        /*transition: background-color 0.3s ease;*/
+    }
+
+    nav ul li form {
+        display: inline; /* Ensure the form stays inline */
+        margin: 0; /* Remove extra margin */
+        padding: 0; /* Remove extra padding */
+    }
+
+    nav ul li form button {
+        background-color: #ed2027;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        text-decoration: none; /* Ensures text decoration matches links styling */
+    }
+
+    nav ul li form button:hover {
+        background-color: black; /* Like other hover effects */
+        color: white; /* Maintain hover behavior consistency */
     }
 </style>

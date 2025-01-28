@@ -11,6 +11,7 @@
 </head>
 
 <body>
+
     <div class="search-bar">
         <form action="/dashboard/pie-chart" method="GET">
 
@@ -46,14 +47,6 @@
     @livewireScripts
     @livewireChartsScripts
 </div>
-<form action="/dashboard/pie-chart" method="GET">
-    <input type="text" name="filter" placeholder="Enter filter"><br>
-    <label>
-        <input type="checkbox" name="urgent" value="1">
-        <span class="slider round">Urgent</span>
-    </label><br>
-    <button type="submit">Submit</button>
-</form>
 </body>
 </html>
 
