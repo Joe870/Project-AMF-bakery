@@ -51,6 +51,7 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 - Composer
 - MySQL
 - Docker (installeer docker desktop via deze link : https://docs.docker.com/desktop/setup/install/windows-install/ )
+- Node(met NPM)
 
 ### **Installatiehandleiding**
 1. **Download de laatste release:**
