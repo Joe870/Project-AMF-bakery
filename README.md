@@ -51,6 +51,7 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 - Composer
 - MySQL
 
+
 ### **Installatiehandleiding**
 1. **Download de laatste release:**
    - Ga naar de releases-pagina( https://github.com/Joe870/Project-AMF-bakery/releases/tag/FirstRelease).
