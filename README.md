@@ -50,8 +50,7 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 - PHP (versie 8.2 of hoger)
 - Composer
 - MySQL
-- Docker (installeer docker desktop via deze link : https://docs.docker.com/desktop/setup/install/windows-install/ )
-- Node(met NPM)
+
 
 ### **Installatiehandleiding**
 1. **Download de laatste release:**
@@ -61,12 +60,6 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 2. **Pak het project uit:**
    - Pak het gedownloade `.zip`-bestand uit op uw computer.
 
-3. **Start de applicatie met Docker:**
-   - Zorg dat Docker geïnstalleerd is.
-   - Open een terminal in de uitgepakte map en voer het volgende uit:
-     ```bash
-     docker-compose up -d
-     ```
 1.	**Kloon de repository:**
 2.	Maak een .env-bestand:
 -	Kopieer de .env in deze branch naar je eigen .env
