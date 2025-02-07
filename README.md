@@ -47,9 +47,11 @@ Als een gebruiker iets verkeerd doet (bijvoorbeeld onjuiste filterinstellingen),
 Volg de onderstaande stappen om de applicatie lokaal te installeren:
 
 ### **Benodigdheden**
-- PHP (versie 8.2 of hoger)
+- XAMMP
 - Composer
 - MySQL
+- node
+- livewire  (https://github.com/asantibanez/livewire-charts)  
 
 
 ### **Installatiehandleiding**
@@ -72,3 +74,13 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 2.	Maak een .env-bestand:
 -	Kopieer de .env in deze branch naar je eigen .env
 
+### **Runnen van code**
+- Om de code te laten runnen en om de code succesvol van de repository te pullen moet je de volgende commandos uitvoeren in je terminal.
+- Je kan een terminal openen door in je documenten de filepath te veranderen naar cmd dit opent automatisch de terminal.
+- Voer de volgende vier commando's uit:
+- 'npm install'
+- 'npm update'
+- 'composer install'
+- 'composer update'
+- Als dit is gelukt is moet je nog een ander commando uitvoeren om de applicatie te runnen via xammp
+- 'php artisan serve' 
