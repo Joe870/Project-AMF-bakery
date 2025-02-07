@@ -59,6 +59,14 @@ Volg de onderstaande stappen om de applicatie lokaal te installeren:
 
 2. **Pak het project uit:**
    - Pak het gedownloade `.zip`-bestand uit op uw computer.
+     
+3. **Download en installeer XAMPP:**
+   - Download XAMPP via: https://www.apachefriends.org/download.html 
+   - Installeer en start Apache en MySQL via het XAMPP Control Panel.
+
+4. **Maak een database aan**
+   - Open phpMyAdmin via http://localhost/phpmyadmin/ 
+   - Maak een nieuwe database aan met de juiste naam (zoals aangegeven in de .env).
 
 1.	**Kloon de repository:**
 2.	Maak een .env-bestand:
